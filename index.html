@@ -2,84 +2,93 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>五子棋</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>五子棋</h1>
-            <p class="subtitle">Gomoku</p>
+    <div class="app">
+        <header class="header">
+            <h1 class="title">五子棋</h1>
+            <span class="subtitle">Gomoku</span>
         </header>
 
-        <main>
-            <div class="board-wrapper">
-                <canvas id="board">您的浏览器不支持 Canvas</canvas>
+        <div class="game-area">
+            <div class="board-container">
+                <canvas id="board" aria-label="五子棋棋盘"></canvas>
             </div>
 
-            <aside class="panel">
-                <div class="panel-section">
-                    <div class="status" id="status">黑棋落子</div>
+            <div class="controls">
+                <div class="card status-card">
+                    <div class="turn-row">
+                        <span class="piece-dot" id="turnDot"></span>
+                        <span class="turn-text" id="status">黑棋落子</span>
+                    </div>
                     <div class="score-row">
-                        <div class="score black-score">
-                            <span class="score-piece black"></span>
-                            <span class="score-label">黑</span>
-                            <span class="score-value" id="blackScore">0</span>
+                        <div class="score-item">
+                            <span class="score-dot black-dot"></span>
+                            <span class="score-num" id="blackScore">0</span>
                         </div>
-                        <div class="score white-score">
-                            <span class="score-label">白</span>
-                            <span class="score-piece white"></span>
-                            <span class="score-value" id="whiteScore">0</span>
+                        <span class="score-divider">:</span>
+                        <div class="score-item">
+                            <span class="score-dot white-dot"></span>
+                            <span class="score-num" id="whiteScore">0</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="panel-section">
-                    <label class="setting-label">对手</label>
-                    <div class="toggle-group" id="opponentToggle">
-                        <button class="toggle-btn active" data-value="ai">AI</button>
-                        <button class="toggle-btn" data-value="friend">好友</button>
+                <div class="card settings-card">
+                    <div class="setting-group">
+                        <span class="setting-label">对手</span>
+                        <div class="toggle-row" id="opponentToggle">
+                            <button class="toggle-btn active" data-value="ai">AI</button>
+                            <button class="toggle-btn" data-value="friend">好友</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-group" id="difficultySection">
+                        <span class="setting-label">难度</span>
+                        <div class="toggle-row" id="difficultyToggle">
+                            <button class="toggle-btn" data-value="easy">简单</button>
+                            <button class="toggle-btn active" data-value="medium">中等</button>
+                            <button class="toggle-btn" data-value="hard">困难</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <span class="setting-label">执棋</span>
+                        <div class="toggle-row" id="colorToggle">
+                            <button class="toggle-btn active" data-value="black">黑棋·先手</button>
+                            <button class="toggle-btn" data-value="white">白棋·后手</button>
+                        </div>
                     </div>
                 </div>
 
-                <div class="panel-section" id="difficultySection">
-                    <label class="setting-label">难度</label>
-                    <div class="toggle-group" id="difficultyToggle">
-                        <button class="toggle-btn" data-value="easy">简单</button>
-                        <button class="toggle-btn active" data-value="medium">中等</button>
-                        <button class="toggle-btn" data-value="hard">困难</button>
-                    </div>
-                </div>
-
-                <div class="panel-section">
-                    <label class="setting-label">执棋</label>
-                    <div class="toggle-group" id="colorToggle">
-                        <button class="toggle-btn active" data-value="black">执黑（先手）</button>
-                        <button class="toggle-btn" data-value="white">执白（后手）</button>
-                    </div>
-                </div>
-
-                <div class="panel-actions">
+                <div class="actions">
                     <button class="btn btn-primary" id="newGameBtn">新游戏</button>
                     <button class="btn btn-secondary" id="undoBtn">悔棋</button>
                 </div>
-            </aside>
-        </main>
+            </div>
+        </div>
     </div>
 
     <div class="modal-overlay" id="resultModal">
         <div class="modal">
-            <div class="modal-icon" id="modalIcon">🏆</div>
-            <h2 class="modal-title" id="modalTitle">你赢了！</h2>
-            <p class="modal-desc" id="modalDesc">恭喜！</p>
+            <div class="modal-icon" id="modalIcon"></div>
+            <h2 class="modal-title" id="modalTitle"></h2>
+            <p class="modal-desc" id="modalDesc"></p>
             <button class="btn btn-primary" id="modalBtn">再来一局</button>
         </div>
     </div>
 
+    <canvas class="confetti-layer" id="confetti"></canvas>
+
     <script src="js/game.js"></script>
-    <script src="js/board.js"></script>
     <script src="js/ai.js"></script>
+    <script src="js/board.js"></script>
+    <script src="js/effects.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

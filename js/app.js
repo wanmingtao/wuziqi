@@ -1,8 +1,6 @@
 /**
- * app.js — 五子棋主控制器
- * 管理游戏流程、事件绑定、状态协调
+ * app.js — 五子棋主控制器（动画协调 + 移动端适配）
  */
-
 const App = (() => {
     /* ---- 状态 ---- */
     let state = {
@@ -13,19 +11,28 @@ const App = (() => {
         gameOver: false,
         isAiThinking: false,
         scores: { black: 0, white: 0 },
-
-        /* 用户设置 */
-        mode: 'ai',       // 'ai' | 'friend'
+        mode: 'ai',
         difficulty: 'medium',
         playerColor: Game.BLACK,
     };
 
-    /* ---- DOM 引用 ---- */
     const els = {};
+    let aiTimeoutId = null;
+
+    /* ======== 初始化 ======== */
+    function init() {
+        cacheElements();
+        Effects.init(document.getElementById('confetti'));
+        calcAndInitBoard();
+        resetBoard();
+        bindEvents();
+        render();
+    }
 
     function cacheElements() {
         els.canvas = document.getElementById('board');
         els.status = document.getElementById('status');
+        els.turnDot = document.getElementById('turnDot');
         els.blackScore = document.getElementById('blackScore');
         els.whiteScore = document.getElementById('whiteScore');
         els.modal = document.getElementById('resultModal');
@@ -36,21 +43,26 @@ const App = (() => {
         els.newGameBtn = document.getElementById('newGameBtn');
         els.undoBtn = document.getElementById('undoBtn');
         els.difficultySection = document.getElementById('difficultySection');
-        els.colorToggle = document.getElementById('colorToggle');
     }
 
-    /* ---- 初始化 ---- */
-    function init() {
-        cacheElements();
-
-        Board.init(els.canvas);
-        resetBoard();
-
-        bindEvents();
-        render();
+    /* ======== 棋盘尺寸计算 ======== */
+    function calcBoardSize() {
+        const isMobile = window.innerWidth < 768;
+        let size;
+        if (isMobile) {
+            size = Math.min(window.innerWidth - 24, window.innerHeight * 0.52);
+        } else {
+            size = Math.min(window.innerWidth - 310, window.innerHeight - 140, 560);
+        }
+        return Math.max(280, Math.floor(size));
     }
 
-    /* ---- 重置棋盘 ---- */
+    function calcAndInitBoard() {
+        const size = calcBoardSize();
+        Board.init(els.canvas, size);
+    }
+
+    /* ======== 棋盘重置 ======== */
     function resetBoard() {
         state.board = Game.createBoard();
         state.currentPlayer = Game.BLACK;
@@ -59,20 +71,27 @@ const App = (() => {
         state.gameOver = false;
         state.isAiThinking = false;
 
+        if (aiTimeoutId) {
+            clearTimeout(aiTimeoutId);
+            aiTimeoutId = null;
+        }
+
+        Board.clearWinCells();
+        Board.clearDropAnim();
+        Effects.clear();
         els.modal.classList.remove('show');
         els.undoBtn.disabled = false;
     }
 
-    /* ---- 事件绑定 ---- */
+    /* ======== 事件绑定 ======== */
     function bindEvents() {
-        /* 棋盘点击 */
-        els.canvas.addEventListener('click', onCanvasClick);
-        els.canvas.addEventListener('mousemove', onCanvasHover);
-        els.canvas.addEventListener('mouseleave', () => {
-            Board.render(makeRenderState());
-        });
+        // 鼠标 / 触摸
+        els.canvas.addEventListener('click', onBoardClick);
+        els.canvas.addEventListener('touchstart', onBoardTouch, { passive: false });
+        els.canvas.addEventListener('mousemove', onBoardHover);
+        els.canvas.addEventListener('mouseleave', () => Board.render(makeRenderState()));
 
-        /* 按钮 */
+        // 按钮
         els.newGameBtn.addEventListener('click', onNewGame);
         els.undoBtn.addEventListener('click', onUndo);
         els.modalBtn.addEventListener('click', () => {
@@ -80,72 +99,102 @@ const App = (() => {
             onNewGame();
         });
 
-        /* 模式切换 */
-        document.querySelectorAll('#opponentToggle .toggle-btn').forEach((btn) => {
-            btn.addEventListener('click', () => {
-                setActive(btn, '#opponentToggle');
-                state.mode = btn.dataset.value;
-                els.difficultySection.style.display =
-                    state.mode === 'ai' ? '' : 'none';
-                onNewGame();
-            });
+        // 对手切换
+        bindToggle('#opponentToggle', (val) => {
+            state.mode = val;
+            els.difficultySection.style.display = val === 'ai' ? '' : 'none';
+            onNewGame();
         });
 
-        /* 难度切换 */
-        document.querySelectorAll('#difficultyToggle .toggle-btn').forEach((btn) => {
-            btn.addEventListener('click', () => {
-                setActive(btn, '#difficultyToggle');
-                state.difficulty = btn.dataset.value;
-                if (state.mode === 'ai' && !state.gameOver) {
-                    /* 难度变更后不重置棋局，但会在下次 AI 走棋时使用新难度 */
-                }
-            });
+        // 难度切换
+        bindToggle('#difficultyToggle', (val) => {
+            state.difficulty = val;
         });
 
-        /* 颜色切换 */
-        document.querySelectorAll('#colorToggle .toggle-btn').forEach((btn) => {
-            btn.addEventListener('click', () => {
-                setActive(btn, '#colorToggle');
-                state.playerColor = btn.dataset.value === 'black'
-                    ? Game.BLACK : Game.WHITE;
+        // 颜色切换
+        bindToggle('#colorToggle', (val) => {
+            state.playerColor = val === 'black' ? Game.BLACK : Game.WHITE;
+            onNewGame();
+        });
+
+        // 窗口尺寸变化
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                calcAndInitBoard();
+                Effects.onResize();
+                Board.render(makeRenderState());
+            }, 200);
+        });
+
+        // 键盘（用于关闭弹窗）
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && els.modal.classList.contains('show')) {
+                els.modal.classList.remove('show');
                 onNewGame();
+            }
+        });
+    }
+
+    function bindToggle(selector, onChange) {
+        document.querySelectorAll(`${selector} .toggle-btn`).forEach((btn) => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll(`${selector} .toggle-btn`).forEach((b) =>
+                    b.classList.remove('active')
+                );
+                btn.classList.add('active');
+                onChange(btn.dataset.value);
             });
         });
     }
 
-    function setActive(btn, groupSelector) {
-        document.querySelectorAll(`${groupSelector} .toggle-btn`).forEach((b) =>
-            b.classList.remove('active')
-        );
-        btn.classList.add('active');
-    }
+    /* ======== 触摸事件（移动端） ======== */
+    function onBoardTouch(e) {
+        e.preventDefault(); // 阻止滚动 / 缩放
+        if (state.gameOver || state.isAiThinking || Board.isAnimating()) return;
 
-    /* ---- 棋盘交互 ---- */
-    function onCanvasClick(e) {
-        if (state.gameOver || state.isAiThinking) return;
+        const touch = e.touches[0];
+        if (!touch) return;
 
         const rect = els.canvas.getBoundingClientRect();
-        const scaleX = els.canvas.width / rect.width;
-        const scaleY = els.canvas.height / rect.height;
+        const scaleX = Board.logicalSize / rect.width;
+        const scaleY = Board.logicalSize / rect.height;
+        const px = (touch.clientX - rect.left) * scaleX;
+        const py = (touch.clientY - rect.top) * scaleY;
+
+        const pos = Board.pixelToGrid(px, py);
+        if (!pos) return;
+        if (!Game.isEmpty(state.board, pos.row, pos.col)) return;
+        if (state.mode === 'ai' && state.currentPlayer !== state.playerColor) return;
+
+        makeMove(pos.row, pos.col);
+    }
+
+    /* ======== 鼠标点击 ======== */
+    function onBoardClick(e) {
+        if (state.gameOver || state.isAiThinking || Board.isAnimating()) return;
+
+        const rect = els.canvas.getBoundingClientRect();
+        const scaleX = Board.logicalSize / rect.width;
+        const scaleY = Board.logicalSize / rect.height;
         const px = (e.clientX - rect.left) * scaleX;
         const py = (e.clientY - rect.top) * scaleY;
 
         const pos = Board.pixelToGrid(px, py);
         if (!pos) return;
         if (!Game.isEmpty(state.board, pos.row, pos.col)) return;
-
-        /* 在好友模式下双方都可下；在 AI 模式下只有玩家回合可下 */
         if (state.mode === 'ai' && state.currentPlayer !== state.playerColor) return;
 
         makeMove(pos.row, pos.col);
     }
 
-    function onCanvasHover(e) {
-        if (state.gameOver || state.isAiThinking) return;
+    function onBoardHover(e) {
+        if (state.gameOver || state.isAiThinking || Board.isAnimating()) return;
 
         const rect = els.canvas.getBoundingClientRect();
-        const scaleX = els.canvas.width / rect.width;
-        const scaleY = els.canvas.height / rect.height;
+        const scaleX = Board.logicalSize / rect.width;
+        const scaleY = Board.logicalSize / rect.height;
         const px = (e.clientX - rect.left) * scaleX;
         const py = (e.clientY - rect.top) * scaleY;
 
@@ -161,26 +210,51 @@ const App = (() => {
         }
     }
 
-    /* ---- 落子逻辑 ---- */
+    /* ======== 落子（动画驱动） ======== */
     function makeMove(row, col) {
         const player = state.currentPlayer;
         state.board[row][col] = player;
         state.moveHistory.push({ row, col, player });
+        els.undoBtn.disabled = true;
 
-        /* 判定胜负 */
-        const winResult = Game.checkWin(state.board, row, col);
+        Board.render(makeRenderState());
+        Board.animateDrop(row, col, player, () => {
+            afterMoveAnimation(player);
+        });
+    }
+
+    function afterMoveAnimation(player) {
+        // 判定胜负
+        const last = state.moveHistory[state.moveHistory.length - 1];
+        const winResult = Game.checkWin(state.board, last.row, last.col);
+
         if (winResult) {
             state.winCells = winResult;
             state.gameOver = true;
             state.scores[player === Game.BLACK ? 'black' : 'white']++;
-            Board.render(makeRenderState());
 
-            showResult(player);
+            // 连胜动画
+            Board.setWinCells(winResult);
+
+            // 庆祝特效
+            const winPoints = winResult.map(([r, c]) => {
+                const { x, y } = Board.gridToPixel(r, c);
+                const rect = els.canvas.getBoundingClientRect();
+                return [
+                    rect.left + (x / Board.logicalSize) * rect.width,
+                    rect.top + (y / Board.logicalSize) * rect.height,
+                ];
+            });
+            Effects.celebrate(winPoints);
+
+            Board.render(makeRenderState());
             updateStatus();
+
+            setTimeout(() => showResult(player), 800);
             return;
         }
 
-        /* 平局 */
+        // 平局
         if (Game.isBoardFull(state.board)) {
             state.gameOver = true;
             Board.render(makeRenderState());
@@ -188,45 +262,49 @@ const App = (() => {
             return;
         }
 
-        /* 切换玩家 */
+        // 切换玩家
         state.currentPlayer = Game.opponent(player);
         Board.render(makeRenderState());
         updateStatus();
+        els.undoBtn.disabled = state.moveHistory.length === 0;
 
-        /* AI 走棋 */
+        // AI 走棋
         if (state.mode === 'ai' && state.currentPlayer !== state.playerColor) {
             scheduleAiMove();
         }
     }
 
-    /* ---- AI 走棋（延迟模拟思考） ---- */
+    /* ======== AI ======== */
     function scheduleAiMove() {
         state.isAiThinking = true;
         els.undoBtn.disabled = true;
+        updateStatus();
 
-        setTimeout(() => {
+        const delay = state.difficulty === 'hard' ? 400 : 250;
+        aiTimeoutId = setTimeout(() => {
+            aiTimeoutId = null;
             const move = AI.getMove(
                 state.board,
                 Game.opponent(state.playerColor),
                 state.difficulty
             );
 
-            if (move) {
-                state.isAiThinking = false;
+            state.isAiThinking = false;
+
+            if (move && Game.isEmpty(state.board, move.row, move.col)) {
                 makeMove(move.row, move.col);
             }
-
-            els.undoBtn.disabled = state.moveHistory.length === 0;
-        }, 300);
+        }, delay);
     }
 
-    /* ---- 悔棋 ---- */
+    /* ======== 悔棋 ======== */
     function onUndo() {
-        if (state.gameOver || state.isAiThinking) return;
+        if (state.gameOver || state.isAiThinking || Board.isAnimating()) return;
         if (state.moveHistory.length === 0) return;
 
+        Board.clearWinCells();
+
         if (state.mode === 'ai') {
-            /* AI 模式下撤回两步（玩家 + AI） */
             const steps = Math.min(2, state.moveHistory.length);
             for (let i = 0; i < steps; i++) {
                 const last = state.moveHistory.pop();
@@ -242,25 +320,24 @@ const App = (() => {
         state.winCells = null;
         Board.render(makeRenderState());
         updateStatus();
+        els.undoBtn.disabled = state.moveHistory.length === 0;
     }
 
-    /* ---- 新游戏 ---- */
+    /* ======== 新游戏 ======== */
     function onNewGame() {
         resetBoard();
         Board.render(makeRenderState());
         updateStatus();
 
-        /* AI 先手（玩家执白） */
         if (state.mode === 'ai' && state.playerColor === Game.WHITE) {
             scheduleAiMove();
         }
     }
 
-    /* ---- 结果显示 ---- */
+    /* ======== 结果弹窗 ======== */
     function showResult(winner) {
         const isPlayer =
-            state.mode === 'friend' ||
-            winner === state.playerColor;
+            state.mode === 'friend' || winner === state.playerColor;
 
         if (state.mode === 'friend') {
             els.modalTitle.textContent = winner === Game.BLACK ? '黑棋胜' : '白棋胜';
@@ -268,55 +345,74 @@ const App = (() => {
             els.modalIcon.textContent = '🏆';
         } else if (isPlayer) {
             els.modalTitle.textContent = '你赢了！';
-            els.modalDesc.textContent = '恭喜你战胜了 AI！';
+            els.modalDesc.textContent = '恭喜战胜 AI！';
             els.modalIcon.textContent = '🎉';
         } else {
             els.modalTitle.textContent = 'AI 获胜';
-            els.modalDesc.textContent = '再接再厉，再来一局吧！';
+            els.modalDesc.textContent = '再接再厉，再来一局吧';
             els.modalIcon.textContent = '🤖';
         }
 
-        setTimeout(() => {
-            els.modal.classList.add('show');
-        }, 600);
+        els.modalIcon.classList.remove('pop');
+        void els.modalIcon.offsetWidth;
+        els.modalIcon.classList.add('pop');
+
+        els.modal.classList.add('show');
     }
 
     function showDraw() {
         els.modalTitle.textContent = '平局';
-        els.modalDesc.textContent = '棋逢对手，旗鼓相当！';
+        els.modalDesc.textContent = '棋逢对手！';
         els.modalIcon.textContent = '🤝';
-
-        setTimeout(() => {
-            els.modal.classList.add('show');
-        }, 600);
+        els.modalIcon.classList.remove('pop');
+        void els.modalIcon.offsetWidth;
+        els.modalIcon.classList.add('pop');
+        els.modal.classList.add('show');
     }
 
-    /* ---- 状态更新 ---- */
+    /* ======== 状态栏 ======== */
     function updateStatus() {
         if (state.gameOver) {
             if (state.winCells) {
-                els.status.textContent =
-                    state.currentPlayer === Game.BLACK ? '白棋胜' : '黑棋胜';
-                els.status.className = 'status win';
+                const winner = state.currentPlayer;
+                els.status.textContent = winner === Game.BLACK ? '白棋胜' : '黑棋胜';
+                els.status.className = 'turn-text';
             } else {
                 els.status.textContent = '平局';
-                els.status.className = 'status draw';
+                els.status.className = 'turn-text';
             }
         } else if (state.isAiThinking) {
             els.status.textContent = 'AI 思考中…';
-            els.status.className = 'status';
+            els.status.className = 'turn-text thinking';
         } else {
             els.status.textContent =
                 state.currentPlayer === Game.BLACK ? '黑棋落子' : '白棋落子';
-            els.status.className =
-                `status ${state.currentPlayer === Game.BLACK ? 'black-turn' : 'white-turn'}`;
+            els.status.className = 'turn-text';
         }
 
-        els.blackScore.textContent = state.scores.black;
-        els.whiteScore.textContent = state.scores.white;
+        // 回合指示点
+        els.turnDot.className = 'piece-dot ' +
+            (state.currentPlayer === Game.BLACK ? 'black' : 'white');
+
+        // 比分
+        updateScore(els.blackScore, state.scores.black);
+        updateScore(els.whiteScore, state.scores.white);
+
+        // 难度可见
+        els.difficultySection.style.display =
+            state.mode === 'ai' ? '' : 'none';
     }
 
-    /* ---- 渲染状态构建 ---- */
+    function updateScore(el, val) {
+        if (el.textContent !== String(val)) {
+            el.textContent = val;
+            el.classList.remove('bump');
+            void el.offsetWidth;
+            el.classList.add('bump');
+        }
+    }
+
+    /* ======== 渲染状态 ======== */
     function makeRenderState(extra) {
         const hover = extra?.hover
             ? { row: extra.hover.row, col: extra.hover.col, player: state.currentPlayer }
@@ -334,17 +430,12 @@ const App = (() => {
         };
     }
 
-    /* ---- 渲染 ---- */
     function render() {
         Board.render(makeRenderState());
         updateStatus();
-
-        els.difficultySection.style.display =
-            state.mode === 'ai' ? '' : 'none';
     }
 
     return Object.freeze({ init });
 })();
 
-/* 页面加载完成后启动 */
 document.addEventListener('DOMContentLoaded', () => App.init());
