@@ -1,0 +1,40 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "在浏览器中打开",
+            "type": "shell",
+            "command": "open",
+            "args": ["${file}"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": false,
+                "reveal": "never",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "启动本地服务器",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "-m", "http.server",
+                "8080",
+                "--directory", "${workspaceFolder}"
+            ],
+            "isBackground": true,
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new"
+            },
+            "problemMatcher": []
+        }
+    ]
+}
