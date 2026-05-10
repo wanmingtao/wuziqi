@@ -444,33 +444,34 @@ body {
   .info-label { font-size: 8px; }
   .info-value { font-size: 14px; }
   .game-row { gap: 4px; }
-  .side-panel { width: 60px; padding: 4px; }
+  .side-panel { width: 52px; padding: 3px; }
   .panel-label { font-size: 8px; }
   .btn { padding: 6px 14px; font-size: 12px; }
 
   .touch-controls { gap: 8px; padding: 10px 2px 0; }
   .touch-row { gap: 8px; }
-  .touch-btn-move { width: 58px; height: 58px; }
-  .touch-btn-softdrop { width: 58px; height: 58px; }
-  .touch-btn-rotate { width: 62px; height: 62px; }
+  .touch-btn-move { width: 56px; height: 56px; }
+  .touch-btn-softdrop { width: 56px; height: 56px; }
+  .touch-btn-rotate { width: 60px; height: 60px; }
   .touch-btn-rotate .touch-icon { font-size: 24px; }
-  .touch-btn-action { width: 120px; height: 48px; font-size: 13px; gap: 6px; }
+  .touch-btn-action { width: 110px; height: 46px; font-size: 13px; gap: 6px; }
+  .touch-btn-action .touch-icon { font-size: 16px; }
 }
 
 @media (max-width: 350px) {
   .info-item { padding: 2px 4px; }
   .info-value { font-size: 12px; }
-  .side-panel { width: 50px; padding: 3px; }
+  .side-panel { width: 42px; padding: 2px; }
   .game-row { gap: 3px; }
 
   .touch-controls { gap: 6px; padding: 8px 0 0; }
   .touch-row { gap: 6px; }
-  .touch-btn-move { width: 50px; height: 50px; border-radius: 14px; }
+  .touch-btn-move { width: 46px; height: 46px; border-radius: 14px; }
   .touch-btn-move .touch-icon { font-size: 20px; }
-  .touch-btn-softdrop { width: 50px; height: 50px; border-radius: 14px; }
+  .touch-btn-softdrop { width: 46px; height: 46px; border-radius: 14px; }
   .touch-btn-softdrop .touch-icon { font-size: 20px; }
-  .touch-btn-rotate { width: 54px; height: 54px; }
+  .touch-btn-rotate { width: 50px; height: 50px; }
   .touch-btn-rotate .touch-icon { font-size: 22px; }
-  .touch-btn-action { width: 100px; height: 42px; font-size: 12px; gap: 4px; border-radius: 14px; }
-  .touch-btn-action .touch-icon { font-size: 15px; }
+  .touch-btn-action { width: 90px; height: 40px; font-size: 11px; gap: 3px; border-radius: 14px; }
+  .touch-btn-action .touch-icon { font-size: 14px; }
 }

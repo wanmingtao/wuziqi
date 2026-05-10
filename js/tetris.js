@@ -37,6 +37,7 @@ const Tetris = (() => {
   let dropInterval, dropTimer, lastTime, animFrameId;
   let clearingRows, clearAnimTimer;
   let particles, shakeTimer;
+  let touchRepeatTimer, touchRepeatInterval;
   let bag;
 
   // ========== DOM Refs ==========
@@ -95,7 +96,7 @@ const Tetris = (() => {
   function calcBlockSize() {
     const wrapperWidth = boardWrapper.clientWidth - 4; // account for border
     blockSize = Math.floor(wrapperWidth / COLS);
-    blockSize = Math.max(18, Math.min(32, blockSize));
+    blockSize = Math.max(18, Math.min(40, blockSize));
     boardCanvas.width = COLS * blockSize;
     boardCanvas.height = ROWS * blockSize;
   }
@@ -119,6 +120,7 @@ const Tetris = (() => {
   }
 
   function resetGame() {
+    stopRepeat();
     board = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
     bag = [];
     nextTypes = [];
@@ -177,6 +179,7 @@ const Tetris = (() => {
 
     if (!isValidPosition(currentShape, currentX, currentY)) {
       gameOver = true;
+      stopRepeat();
       saveBest();
       overlayScore.textContent = '得分: ' + score + '  等级: ' + level;
       gameOverlay.classList.add('show');
@@ -316,6 +319,7 @@ const Tetris = (() => {
       }
     }
     if (gameOver) {
+      stopRepeat();
       saveBest();
       overlayScore.textContent = '得分: ' + score + '  等级: ' + level;
       gameOverlay.classList.add('show');
@@ -746,16 +750,20 @@ const Tetris = (() => {
       const dt = Date.now() - tsTime;
       const ax = Math.abs(dx), ay = Math.abs(dy);
 
-      if (ax < 10 && ay < 10 && dt < 300) {
+      const tap = Math.max(blockSize * 0.5, 10);
+      const moveThresh = Math.max(blockSize * 1.5, 30);
+      const fastThresh = Math.max(blockSize * 3, 60);
+
+      if (ax < tap && ay < tap && dt < 300) {
         // Tap = rotate
         rotatePiece();
-      } else if (ay > ax && dy > 40 && dt < 200) {
+      } else if (ay > ax && dy > fastThresh && dt < 200) {
         // Fast swipe down = hard drop
         hardDrop();
-      } else if (ay > ax && dy > 40) {
-        // Slow swipe down = soft drop
+      } else if (ay > ax && dy > moveThresh) {
+        // Soft drop
         softDrop();
-      } else if (ax > ay && ax > 20) {
+      } else if (ax > ay && ax > moveThresh) {
         movePiece(dx > 0 ? 1 : -1, 0);
       }
     }, { passive: true });
@@ -774,25 +782,51 @@ const Tetris = (() => {
     });
     pauseBtn.addEventListener('click', togglePause);
 
-    // Touch control buttons
-    function bindTouchBtn(id, action) {
+    // Touch control buttons — with repeat-on-hold for directional buttons
+    function startRepeat(action) {
+      if (gameOver || paused || clearingRows) return;
+      action();
+      if (touchRepeatTimer) clearTimeout(touchRepeatTimer);
+      touchRepeatTimer = setTimeout(() => {
+        if (gameOver || paused) { stopRepeat(); return; }
+        touchRepeatInterval = setInterval(() => {
+          if (gameOver || paused) { stopRepeat(); return; }
+          action();
+        }, 50);
+      }, 150);
+    }
+    function stopRepeat() {
+      if (touchRepeatTimer) { clearTimeout(touchRepeatTimer); touchRepeatTimer = null; }
+      if (touchRepeatInterval) { clearInterval(touchRepeatInterval); touchRepeatInterval = null; }
+    }
+
+    function bindTouchBtn(id, action, repeatable) {
       const el = document.getElementById(id);
       if (!el) return;
       el.addEventListener('touchstart', e => {
         e.preventDefault();
-        if (!gameOver && !paused && !clearingRows) action();
+        if (gameOver || paused || clearingRows) return;
+        if (repeatable) startRepeat(action); else action();
+      }, { passive: false });
+      el.addEventListener('touchend', e => {
+        e.preventDefault();
+        if (repeatable) stopRepeat();
+      }, { passive: false });
+      el.addEventListener('touchcancel', () => {
+        if (repeatable) stopRepeat();
       }, { passive: false });
       el.addEventListener('mousedown', e => {
         e.preventDefault();
-        if (!gameOver && !paused && !clearingRows) action();
+        if (gameOver || paused || clearingRows) return;
+        action();
       });
     }
-    bindTouchBtn('touchLeft', () => movePiece(-1, 0));
-    bindTouchBtn('touchRight', () => movePiece(1, 0));
-    bindTouchBtn('touchDown', () => softDrop());
-    bindTouchBtn('touchRotate', () => rotatePiece());
-    bindTouchBtn('touchDrop', () => hardDrop());
-    bindTouchBtn('touchHold', () => holdCurrentPiece());
+    bindTouchBtn('touchLeft', () => movePiece(-1, 0), true);
+    bindTouchBtn('touchRight', () => movePiece(1, 0), true);
+    bindTouchBtn('touchDown', () => softDrop(), true);
+    bindTouchBtn('touchRotate', () => rotatePiece(), false);
+    bindTouchBtn('touchDrop', () => hardDrop(), false);
+    bindTouchBtn('touchHold', () => holdCurrentPiece(), false);
 
     // Resize
     let resizeTimer;
@@ -811,6 +845,7 @@ const Tetris = (() => {
     paused = !paused;
     pauseBtn.textContent = paused ? '继续' : '暂停';
     if (!paused) lastTime = 0;
+    if (paused) stopRepeat();
   }
 
   return Object.freeze({ init });
