@@ -19,6 +19,7 @@ html, body {
   font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
   background: var(--bg);
   min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
   color: var(--text);
 }
@@ -28,7 +29,8 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  padding: 12px;
+  min-height: 100dvh;
+  padding: 8px;
 }
 
 #bgCanvas {
@@ -46,7 +48,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
   max-width: 500px;
 }
@@ -54,7 +56,7 @@ body {
 /* ---- Info Bar ---- */
 .info-bar {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
   justify-content: center;
 }
@@ -65,7 +67,7 @@ body {
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 5px 12px;
+  padding: 4px 10px;
   text-align: center;
   flex: 1;
   min-width: 0;
@@ -99,7 +101,7 @@ body {
 /* ---- Game Row (hold | board | next) ---- */
 .game-row {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: stretch;
   width: 100%;
   justify-content: center;
@@ -117,7 +119,7 @@ body {
   border-radius: var(--radius);
   padding: 6px;
   gap: 2px;
-  width: 88px;
+  width: 80px;
   flex-shrink: 0;
 }
 
@@ -250,94 +252,225 @@ body {
 /* ---- Control Bar ---- */
 .control-bar {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
-/* ---- Hint ---- */
+/* ---- Hint (desktop only) ---- */
 .hint {
   text-align: center;
   color: var(--text-dim);
   font-size: 11px;
-  margin-top: 2px;
 }
 
-/* ---- Touch Controls ---- */
+@media (hover: none) and (pointer: coarse) {
+  .hint { display: none; }
+}
+
+/* =========================================================
+ *  Touch Controls — mobile-only gamepad layout
+ * ========================================================= */
 .touch-controls {
   display: none;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 8px;
+  gap: 10px;
+  padding: 12px 4px 0;
   width: 100%;
+  border-top: 1px solid var(--border);
+  margin-top: 2px;
 }
 
 @media (hover: none) and (pointer: coarse) {
   .touch-controls { display: flex; }
 }
 
-.touch-row {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
+.touch-divider {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.12);
 }
 
+.touch-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+/* ---- Base touch button ---- */
 .touch-btn {
-  width: 52px;
-  height: 52px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--card);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  color: var(--text);
-  font-size: 16px;
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
   cursor: pointer;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   font-family: inherit;
-  transition: background 0.1s, transform 0.1s;
+  transition: transform 0.08s ease, box-shadow 0.15s ease, border-color 0.15s ease;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   -webkit-user-select: none;
   touch-action: none;
+  position: relative;
+  overflow: hidden;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Top highlight sheen */
+.touch-btn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), transparent);
+  pointer-events: none;
+  border-radius: inherit;
 }
 
 .touch-btn:active {
-  background: rgba(255,255,255,0.12);
-  transform: scale(0.92);
+  transform: scale(0.9);
 }
 
-.touch-btn-wide {
-  width: 114px;
-  font-size: 13px;
+.touch-icon {
+  display: block;
+  line-height: 1;
+}
+
+/* ---- Movement buttons (◀ ▼ ▶) ---- */
+.touch-btn-move {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  color: rgba(255,255,255,0.82);
+}
+
+.touch-btn-move .touch-icon { font-size: 24px; }
+
+.touch-btn-left:active,
+.touch-btn-right:active {
+  box-shadow: 0 0 24px rgba(100,200,255,0.18);
+  border-color: rgba(100,200,255,0.3);
+}
+
+/* ---- Soft-drop button (▼) ---- */
+.touch-btn-softdrop {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  color: rgba(118, 255, 3, 0.85);
+  border-color: rgba(118, 255, 3, 0.15);
+}
+
+.touch-btn-softdrop .touch-label {
+  font-size: 9px;
+  color: rgba(118, 255, 3, 0.5);
+  margin-top: 2px;
+  letter-spacing: 0.3px;
+}
+
+.touch-btn-softdrop .touch-icon { font-size: 24px; }
+
+.touch-btn-softdrop:active {
+  box-shadow: 0 0 28px rgba(118, 255, 3, 0.22);
+  border-color: rgba(118, 255, 3, 0.35);
+}
+
+/* ---- Rotate button (↻) — circular ---- */
+.touch-btn-rotate {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  color: rgba(213, 0, 249, 0.85);
+  border-color: rgba(213, 0, 249, 0.2);
+  border-width: 2px;
+  background: radial-gradient(circle at 35% 35%, rgba(213,0,249,0.08), rgba(213,0,249,0.02));
+}
+
+.touch-btn-rotate .touch-icon { font-size: 28px; }
+
+.touch-btn-rotate:active {
+  box-shadow: 0 0 28px rgba(213, 0, 249, 0.28);
+  border-color: rgba(213, 0, 249, 0.45);
+  background: radial-gradient(circle at 35% 35%, rgba(213,0,249,0.14), rgba(213,0,249,0.04));
+}
+
+/* ---- Action buttons (⤓ hard drop & ⊞ hold) ---- */
+.touch-btn-action {
+  width: 140px;
+  height: 54px;
+  border-radius: 16px;
+  flex-direction: row;
+  gap: 8px;
+  font-size: 14px;
   font-weight: 600;
+}
+
+.touch-btn-action .touch-icon { font-size: 18px; }
+
+/* Hard drop — red accent */
+.touch-btn-drop {
+  color: rgba(255, 23, 68, 0.85);
+  border-color: rgba(255, 23, 68, 0.16);
+  background: linear-gradient(145deg, rgba(255,23,68,0.07), rgba(255,23,68,0.02));
+}
+.touch-btn-drop:active {
+  box-shadow: 0 0 24px rgba(255, 23, 68, 0.22);
+  border-color: rgba(255, 23, 68, 0.38);
+}
+
+/* Hold — gold accent */
+.touch-btn-hold {
+  color: var(--gold);
+  border-color: rgba(245, 166, 35, 0.16);
+  background: linear-gradient(145deg, rgba(245,166,35,0.07), rgba(245,166,35,0.02));
+}
+.touch-btn-hold:active {
+  box-shadow: 0 0 24px rgba(245, 166, 35, 0.22);
+  border-color: rgba(245, 166, 35, 0.38);
 }
 
 /* ---- Responsive ---- */
 @media (max-width: 420px) {
-  body { padding: 6px; }
-  .tetris-app { gap: 6px; }
+  body { padding: 4px; }
+  .tetris-app { gap: 4px; }
   .info-bar { gap: 4px; }
-  .info-item { padding: 4px 6px; }
+  .info-item { padding: 3px 6px; }
   .info-label { font-size: 8px; }
   .info-value { font-size: 14px; }
   .game-row { gap: 4px; }
-  .side-panel { width: 66px; padding: 4px; }
+  .side-panel { width: 60px; padding: 4px; }
   .panel-label { font-size: 8px; }
   .btn { padding: 6px 14px; font-size: 12px; }
-  .hint { font-size: 10px; }
-  .touch-controls { gap: 4px; padding: 6px; }
-  .touch-row { gap: 4px; }
-  .touch-btn { width: 44px; height: 44px; font-size: 13px; }
-  .touch-btn-wide { width: 96px; }
+
+  .touch-controls { gap: 8px; padding: 10px 2px 0; }
+  .touch-row { gap: 8px; }
+  .touch-btn-move { width: 58px; height: 58px; }
+  .touch-btn-softdrop { width: 58px; height: 58px; }
+  .touch-btn-rotate { width: 62px; height: 62px; }
+  .touch-btn-rotate .touch-icon { font-size: 24px; }
+  .touch-btn-action { width: 120px; height: 48px; font-size: 13px; gap: 6px; }
 }
 
 @media (max-width: 350px) {
-  .info-item { padding: 3px 5px; }
+  .info-item { padding: 2px 4px; }
   .info-value { font-size: 12px; }
-  .side-panel { width: 52px; padding: 3px; }
+  .side-panel { width: 50px; padding: 3px; }
   .game-row { gap: 3px; }
-  .touch-btn { width: 38px; height: 38px; font-size: 12px; }
-  .touch-btn-wide { width: 82px; font-size: 11px; }
+
+  .touch-controls { gap: 6px; padding: 8px 0 0; }
+  .touch-row { gap: 6px; }
+  .touch-btn-move { width: 50px; height: 50px; border-radius: 14px; }
+  .touch-btn-move .touch-icon { font-size: 20px; }
+  .touch-btn-softdrop { width: 50px; height: 50px; border-radius: 14px; }
+  .touch-btn-softdrop .touch-icon { font-size: 20px; }
+  .touch-btn-rotate { width: 54px; height: 54px; }
+  .touch-btn-rotate .touch-icon { font-size: 22px; }
+  .touch-btn-action { width: 100px; height: 42px; font-size: 12px; gap: 4px; border-radius: 14px; }
+  .touch-btn-action .touch-icon { font-size: 15px; }
 }

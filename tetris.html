@@ -57,20 +57,35 @@
     <button class="btn btn-primary" id="newGameBtn">新游戏</button>
   </div>
 
-  <p class="hint">← → 移动 ↑ 旋转 ↓ 软降 空格 硬降 C 保持</p>
+  <p class="hint">← → 移动 &nbsp;↑ 旋转 &nbsp;↓ 软降 &nbsp;空格 硬降 &nbsp;C 保持</p>
 
   <div class="touch-controls">
     <div class="touch-row">
-      <button class="touch-btn" id="touchRotate">↻</button>
+      <button class="touch-btn touch-btn-rotate" id="touchRotate">
+        <span class="touch-icon">↻</span>
+      </button>
     </div>
     <div class="touch-row">
-      <button class="touch-btn" id="touchLeft">◀</button>
-      <button class="touch-btn" id="touchDown">▼</button>
-      <button class="touch-btn" id="touchRight">▶</button>
+      <button class="touch-btn touch-btn-move touch-btn-left" id="touchLeft">
+        <span class="touch-icon">◀</span>
+      </button>
+      <button class="touch-btn touch-btn-softdrop" id="touchDown">
+        <span class="touch-icon">▼</span>
+        <span class="touch-label">软降</span>
+      </button>
+      <button class="touch-btn touch-btn-move touch-btn-right" id="touchRight">
+        <span class="touch-icon">▶</span>
+      </button>
     </div>
     <div class="touch-row">
-      <button class="touch-btn touch-btn-wide" id="touchDrop">⤓ 硬降</button>
-      <button class="touch-btn touch-btn-wide" id="touchHold">⊞ 保持</button>
+      <button class="touch-btn touch-btn-action touch-btn-drop" id="touchDrop">
+        <span class="touch-icon">⤓</span>
+        <span>硬降</span>
+      </button>
+      <button class="touch-btn touch-btn-action touch-btn-hold" id="touchHold">
+        <span class="touch-icon">⊞</span>
+        <span>保持</span>
+      </button>
     </div>
   </div>
 
