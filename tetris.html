@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>俄罗斯方块</title>
+  <link rel="stylesheet" href="css/tetris.css">
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+
+<div class="tetris-app">
+
+  <div class="info-bar">
+    <div class="info-item">
+      <span class="info-label">分数</span>
+      <span class="info-value" id="scoreDisplay">0</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">等级</span>
+      <span class="info-value" id="levelDisplay">1</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">行数</span>
+      <span class="info-value" id="linesDisplay">0</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">最高</span>
+      <span class="info-value" id="bestDisplay">0</span>
+    </div>
+  </div>
+
+  <div class="game-row">
+    <div class="side-panel" id="holdPanel">
+      <div class="panel-label">保持</div>
+      <canvas class="preview-canvas" id="holdCanvas" width="80" height="70"></canvas>
+    </div>
+
+    <div class="board-wrapper" id="boardWrapper">
+      <canvas id="boardCanvas"></canvas>
+      <div class="overlay" id="gameOverlay">
+        <h2>游戏结束</h2>
+        <p id="overlayScore">得分: 0</p>
+        <button class="btn btn-primary" id="overlayRetry">再来一局</button>
+      </div>
+    </div>
+
+    <div class="side-panel" id="nextPanel">
+      <div class="panel-label">下一个</div>
+      <canvas class="preview-canvas" id="nextCanvas" width="80" height="100"></canvas>
+    </div>
+  </div>
+
+  <div class="control-bar">
+    <button class="btn btn-secondary" id="pauseBtn">暂停</button>
+    <button class="btn btn-primary" id="newGameBtn">新游戏</button>
+  </div>
+
+  <p class="hint">← → 移动 ↑ 旋转 ↓ 软降 空格 硬降 C 保持</p>
+
+</div>
+
+<script src="js/tetris.js"></script>
+</body>
+</html>

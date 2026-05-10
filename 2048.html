@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>2048</title>
+  <link rel="stylesheet" href="css/2048.css">
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+<canvas id="confettiCanvas"></canvas>
+
+<div class="wrapper">
+  <div class="game-container" id="app">
+
+    <header class="header">
+      <h1>2048</h1>
+      <div class="scores">
+        <div class="score-box">
+          <span class="label">分数</span>
+          <span class="value" id="scoreDisplay">0</span>
+        </div>
+        <div class="score-box">
+          <span class="label">最高</span>
+          <span class="value" id="bestDisplay">0</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="mode-row">
+      <span class="mode-label">模式</span>
+      <div class="toggle-row" id="modeToggle">
+        <button class="toggle-btn active" id="modeClassic">经典</button>
+        <button class="toggle-btn" id="modeBlitz">极速</button>
+      </div>
+      <div class="blitz-timer" id="blitzTimer">60s</div>
+    </div>
+
+    <div class="sub-row">
+      <p>合并数字，达到 <strong>2048</strong>！</p>
+      <div class="btn-group">
+        <button class="btn btn-secondary" id="undoBtn" disabled>撤销</button>
+        <button class="btn btn-primary" id="newBtn">新游戏</button>
+      </div>
+    </div>
+
+    <div class="grid-container" id="gridContainer">
+      <div class="grid-bg" id="gridBg"></div>
+      <div class="tile-layer" id="tileLayer"></div>
+
+      <div class="overlay" id="gameOverOverlay">
+        <div class="overlay-content">
+          <h2 id="resultTitle">游戏结束</h2>
+          <p id="resultScore">得分: 0</p>
+          <div class="overlay-actions">
+            <button class="btn btn-secondary" id="keepGoingBtn" style="display:none">继续挑战</button>
+            <button class="btn btn-primary" id="retryBtn">再来一局</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="powerups">
+      <button class="powerup-btn" id="powerClear" disabled>
+        <span class="icon">🧹</span>清除<span class="badge">0</span>
+      </button>
+      <button class="powerup-btn" id="powerHint" disabled>
+        <span class="icon">💡</span>提示<span class="badge">0</span>
+      </button>
+      <button class="powerup-btn" id="powerShuffle" disabled>
+        <span class="icon">🔀</span>重排<span class="badge">0</span>
+      </button>
+    </div>
+
+    <p class="hint">⌨ 方向键 / 滑动操作 &nbsp;|&nbsp; 分数里程碑解锁道具</p>
+
+  </div>
+</div>
+
+<script src="js/2048.js"></script>
+</body>
+</html>

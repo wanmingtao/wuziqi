@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>连连看</title>
+  <link rel="stylesheet" href="css/link.css">
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+
+<div class="link-app">
+
+  <header class="link-header">
+    <h1 class="link-title">连连看</h1>
+    <p class="link-subtitle">匹配相同的图案，清除所有方块</p>
+  </header>
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <span class="stat-label">分数</span>
+      <span class="stat-value" id="scoreDisplay">0</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">时间</span>
+      <span class="stat-value" id="timerDisplay">00:00</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">剩余</span>
+      <span class="stat-value" id="pairsDisplay">40</span>
+    </div>
+  </div>
+
+  <div class="board-wrapper">
+    <canvas id="lineCanvas"></canvas>
+    <div class="tile-grid" id="tileGrid"></div>
+    <div class="overlay" id="winOverlay">
+      <div class="overlay-icon">🎉</div>
+      <h2>恭喜通关！</h2>
+      <p id="overlayScore">最终得分: 0</p>
+      <p id="overlayTime">用时: 00:00</p>
+      <button class="btn btn-primary" id="overlayRetry">再来一局</button>
+    </div>
+  </div>
+
+  <div class="control-bar">
+    <button class="btn btn-secondary" id="hintBtn"><span class="btn-icon">💡</span>提示</button>
+    <button class="btn btn-secondary" id="shuffleBtn"><span class="btn-icon">🔀</span>重排</button>
+    <button class="btn btn-primary" id="newGameBtn">新游戏</button>
+  </div>
+
+  <p class="hint-text">💡 点击两个相同图案 · H 提示 · S 重排 · R 新游戏</p>
+
+</div>
+
+<script src="js/link.js"></script>
+</body>
+</html>
