@@ -261,6 +261,59 @@ body {
   margin-top: 2px;
 }
 
+/* ---- Touch Controls ---- */
+.touch-controls {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  width: 100%;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .touch-controls { display: flex; }
+}
+
+.touch-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.touch-btn {
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--text);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: background 0.1s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.touch-btn:active {
+  background: rgba(255,255,255,0.12);
+  transform: scale(0.92);
+}
+
+.touch-btn-wide {
+  width: 114px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 /* ---- Responsive ---- */
 @media (max-width: 420px) {
   body { padding: 6px; }
@@ -274,6 +327,10 @@ body {
   .panel-label { font-size: 8px; }
   .btn { padding: 6px 14px; font-size: 12px; }
   .hint { font-size: 10px; }
+  .touch-controls { gap: 4px; padding: 6px; }
+  .touch-row { gap: 4px; }
+  .touch-btn { width: 44px; height: 44px; font-size: 13px; }
+  .touch-btn-wide { width: 96px; }
 }
 
 @media (max-width: 350px) {
@@ -281,4 +338,6 @@ body {
   .info-value { font-size: 12px; }
   .side-panel { width: 52px; padding: 3px; }
   .game-row { gap: 3px; }
+  .touch-btn { width: 38px; height: 38px; font-size: 12px; }
+  .touch-btn-wide { width: 82px; font-size: 11px; }
 }

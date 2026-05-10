@@ -760,7 +760,6 @@ const Tetris = (() => {
       }
     }, { passive: true });
 
-    // Buttons
     newGameBtn.addEventListener('click', () => {
       if (animFrameId) cancelAnimationFrame(animFrameId);
       resetGame();
@@ -774,6 +773,26 @@ const Tetris = (() => {
       gameLoop(0);
     });
     pauseBtn.addEventListener('click', togglePause);
+
+    // Touch control buttons
+    function bindTouchBtn(id, action) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('touchstart', e => {
+        e.preventDefault();
+        if (!gameOver && !paused && !clearingRows) action();
+      }, { passive: false });
+      el.addEventListener('mousedown', e => {
+        e.preventDefault();
+        if (!gameOver && !paused && !clearingRows) action();
+      });
+    }
+    bindTouchBtn('touchLeft', () => movePiece(-1, 0));
+    bindTouchBtn('touchRight', () => movePiece(1, 0));
+    bindTouchBtn('touchDown', () => softDrop());
+    bindTouchBtn('touchRotate', () => rotatePiece());
+    bindTouchBtn('touchDrop', () => hardDrop());
+    bindTouchBtn('touchHold', () => holdCurrentPiece());
 
     // Resize
     let resizeTimer;
