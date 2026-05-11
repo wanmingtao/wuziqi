@@ -159,10 +159,31 @@ html, body {
     radial-gradient(circle at 70% 60%, rgba(200,130,255,0.1) 0%, transparent 50%);
 }
 
+.card-doodle {
+  background: linear-gradient(135deg, #0a1a0a, #0a2a1a);
+  position: relative;
+}
+
+.card-snake {
+  background: linear-gradient(135deg, #0a1a14, #0a2a14);
+  position: relative;
+}
+
+.card-breakout {
+  background: linear-gradient(135deg, #1a0a14, #2a0a1a);
+  position: relative;
+}
+
+.card-flappy {
+  background: linear-gradient(135deg, #0a0a1a, #0a1a2a);
+  position: relative;
+}
+
 .card-tetris {
   background: linear-gradient(135deg, #0a1a2a, #0a0a2a);
   position: relative;
 }
+
 .card-tetris::before {
   content: '';
   position: absolute;

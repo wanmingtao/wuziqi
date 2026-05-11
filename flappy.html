@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Flappy Bird</title>
+  <link rel="stylesheet" href="css/flappy.css">
+</head>
+<body>
+<canvas id="bgCanvas"></canvas>
+<div class="app">
+  <div class="hud">
+    <div class="hud-item"><span class="hud-label">分数</span><span class="hud-value" id="scoreDisplay">0</span></div>
+    <div class="hud-item"><span class="hud-label">最高</span><span class="hud-value" id="bestDisplay">0</span></div>
+  </div>
+  <div class="game-container">
+    <canvas id="gameCanvas"></canvas>
+    <div class="overlay hidden" id="overlay">
+      <div class="overlay-content">
+        <h2 id="resultTitle">撞到啦</h2>
+        <p id="resultScore">得分: 0</p>
+        <button class="btn btn-primary" id="restartBtn">再来一局</button>
+      </div>
+    </div>
+  </div>
+  <div class="control-bar">
+    <button class="btn btn-primary" id="newGameBtn">新游戏</button>
+  </div>
+  <p class="hint">点击 / 空格 / ↑ 扇动翅膀</p>
+</div>
+<script src="js/flappy.js"></script>
+</body>
+</html>

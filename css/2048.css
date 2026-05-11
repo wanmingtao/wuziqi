@@ -115,61 +115,6 @@ body {
   100% { transform: scale(1); }
 }
 
-/* ---- Mode Toggle ---- */
-.mode-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-  padding: 0 2px;
-}
-.mode-row .mode-label {
-  font-size: 11px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-.toggle-row {
-  display: flex;
-  gap: 0;
-  background: var(--card);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  border: 1px solid var(--border);
-}
-.toggle-btn {
-  padding: 5px 14px;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
-}
-.toggle-btn.active {
-  background: var(--gold);
-  color: var(--bg);
-}
-
-/* ---- Blitz Timer ---- */
-.blitz-timer {
-  display: none;
-  align-items: center;
-  gap: 6px;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--gold-bright);
-}
-.blitz-timer.visible { display: flex; }
-.blitz-timer.urgent { color: #f65e3b; animation: timerPulse 0.5s ease infinite alternate; }
-@keyframes timerPulse {
-  from { opacity: 1; transform: scale(1); }
-  to   { opacity: 0.6; transform: scale(1.05); }
-}
-
-/* ---- Subtitle row ---- */
 .sub-row {
   display: flex;
   justify-content: space-between;
@@ -214,67 +159,6 @@ body {
   cursor: not-allowed;
 }
 
-/* ---- Power-up section ---- */
-.powerups {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-  justify-content: center;
-}
-.powerup-btn {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.25s var(--ease-out);
-  font-family: inherit;
-  user-select: none;
-  -webkit-user-select: none;
-}
-.powerup-btn:hover:not(:disabled) {
-  background: var(--surface-hover);
-  border-color: rgba(255,255,255,0.15);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-}
-.powerup-btn:active:not(:disabled) { transform: translateY(0); }
-.powerup-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-.powerup-btn .badge {
-  position: absolute;
-  top: -6px; right: -6px;
-  width: 18px; height: 18px;
-  background: var(--gold);
-  color: var(--bg);
-  border-radius: 50%;
-  font-size: 11px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-}
-.powerup-btn.unlock {
-  animation: powerUnlock 0.6s var(--ease-spring);
-}
-@keyframes powerUnlock {
-  0%   { transform: scale(1); box-shadow: 0 0 0 0 rgba(245,166,35,0.6); }
-  50%  { transform: scale(1.08); box-shadow: 0 0 20px 8px rgba(245,166,35,0.25); }
-  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245,166,35,0); }
-}
-.powerup-btn .icon { font-size: 16px; }
-
-/* ---- Grid ---- */
 .grid-container {
   position: relative;
   width: 100%;
@@ -289,10 +173,6 @@ body {
   user-select: none;
   -webkit-user-select: none;
   transition: border-color 0.3s;
-}
-.grid-container.combo-active {
-  border-color: var(--gold);
-  box-shadow: 0 0 30px rgba(245,166,35,0.25), inset 0 0 30px rgba(245,166,35,0.06);
 }
 
 .grid-bg {
@@ -361,61 +241,6 @@ body {
   box-shadow: 0 0 30px rgba(255,255,255,0.08);
 }
 
-/* Star tile */
-.tile-star {
-  box-shadow: 0 0 18px rgba(245,166,35,0.55), 0 0 36px rgba(245,166,35,0.2) !important;
-}
-.tile-star::after {
-  content: '✦';
-  position: absolute;
-  top: 2px; right: 6px;
-  font-size: 12px;
-  color: var(--gold-bright);
-  pointer-events: none;
-}
-
-/* ---- Combo toast ---- */
-.combo-toast {
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 28px;
-  font-weight: 900;
-  color: var(--gold-bright);
-  text-shadow: 0 0 20px rgba(245,166,35,0.7);
-  pointer-events: none;
-  z-index: 50;
-  animation: comboUp 0.8s ease-out forwards;
-}
-@keyframes comboUp {
-  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-  20%  { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
-  100% { opacity: 0; transform: translate(-50%, -80%) scale(1); }
-}
-
-/* ---- Milestone toast ---- */
-.milestone-toast {
-  position: fixed;
-  top: 20px; left: 50%;
-  transform: translateX(-50%);
-  background: linear-gradient(135deg, var(--gold-bright), var(--gold));
-  color: var(--bg);
-  padding: 10px 24px;
-  border-radius: 20px;
-  font-weight: 700;
-  font-size: 14px;
-  z-index: 500;
-  pointer-events: none;
-  animation: milestoneIn 2.2s ease forwards;
-  box-shadow: 0 4px 20px rgba(245,166,35,0.4);
-}
-@keyframes milestoneIn {
-  0%   { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-  15%  { opacity: 1; transform: translateX(-50%) translateY(0); }
-  85%  { opacity: 1; transform: translateX(-50%) translateY(0); }
-  100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-}
-
 /* ---- Overlay ---- */
 .overlay {
   position: absolute;
@@ -455,7 +280,6 @@ body {
   background-clip: text;
 }
 .overlay-content .lose-title { color: var(--text); }
-.overlay-content .timeup-title { color: #f65e3b; }
 .overlay-content p {
   color: var(--text-muted);
   font-size: 15px;
@@ -467,15 +291,6 @@ body {
   gap: 8px;
   justify-content: center;
   flex-wrap: wrap;
-}
-
-/* ---- Hint glow ---- */
-.grid-cell.hint-glow {
-  animation: hintPulse 0.6s ease infinite alternate;
-}
-@keyframes hintPulse {
-  from { background: rgba(245,166,35,0.1); }
-  to   { background: rgba(245,166,35,0.35); }
 }
 
 /* ---- Hint ---- */
@@ -493,8 +308,6 @@ body {
   .score-box { min-width: 60px; padding: 4px 10px; }
   .score-box .value { font-size: 18px; }
   body { padding: 12px 0; }
-  .powerup-btn { padding: 6px 10px; font-size: 12px; }
-  .powerup-btn .icon { font-size: 14px; }
 }
 
 @media (max-width: 380px) {
@@ -502,6 +315,4 @@ body {
   .score-box { min-width: 52px; padding: 3px 8px; }
   .score-box .value { font-size: 16px; }
   .btn { padding: 6px 12px; font-size: 12px; }
-  .toggle-btn { padding: 4px 10px; font-size: 11px; }
-  .powerup-btn { padding: 5px 8px; font-size: 11px; gap: 2px; }
 }

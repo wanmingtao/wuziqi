@@ -194,6 +194,7 @@ const Tetris = (() => {
     if (!canHold || gameOver || paused || clearingRows) return;
     canHold = false;
     const prevHold = holdType;
+    const prevType = currentType;
     holdType = currentType;
     if (prevHold) {
       currentType = prevHold;
@@ -201,6 +202,12 @@ const Tetris = (() => {
       currentRot = 0;
       currentX = Math.floor((COLS - currentShape[0].length) / 2);
       currentY = currentType === 'I' ? -1 : -2;
+      if (!isValidPosition(currentShape, currentX, currentY)) {
+        currentType = prevType;
+        holdType = prevHold;
+        canHold = true;
+        return;
+      }
     } else {
       currentType = nextTypes.shift();
       nextTypes.push(pullFromBag());
@@ -275,6 +282,7 @@ const Tetris = (() => {
       dist++;
     }
     score += dist * 2;
+    dropTimer = 0;
     updateScore();
     lockPiece();
   }
@@ -310,15 +318,18 @@ const Tetris = (() => {
 
   // ========== Lock & Clear ==========
   function lockPiece() {
+    let blocked = false;
+    outer:
     for (let r = 0; r < currentShape.length; r++) {
       for (let c = 0; c < currentShape[r].length; c++) {
         if (!currentShape[r][c]) continue;
         const by = currentY + r;
-        if (by < 0) { gameOver = true; break; }
+        if (by < 0) { blocked = true; break outer; }
         board[by][currentX + c] = currentType;
       }
     }
-    if (gameOver) {
+    if (blocked) {
+      gameOver = true;
       stopRepeat();
       saveBest();
       overlayScore.textContent = '得分: ' + score + '  等级: ' + level;
@@ -717,6 +728,23 @@ const Tetris = (() => {
   }
 
   // ========== Input ==========
+  function startRepeat(action) {
+    if (gameOver || paused || clearingRows) return;
+    action();
+    if (touchRepeatTimer) clearTimeout(touchRepeatTimer);
+    touchRepeatTimer = setTimeout(() => {
+      if (gameOver || paused) { stopRepeat(); return; }
+      touchRepeatInterval = setInterval(() => {
+        if (gameOver || paused) { stopRepeat(); return; }
+        action();
+      }, 50);
+    }, 150);
+  }
+  function stopRepeat() {
+    if (touchRepeatTimer) { clearTimeout(touchRepeatTimer); touchRepeatTimer = null; }
+    if (touchRepeatInterval) { clearInterval(touchRepeatInterval); touchRepeatInterval = null; }
+  }
+
   function bindInput() {
     document.addEventListener('keydown', e => {
       if (gameOver) return;
@@ -783,23 +811,6 @@ const Tetris = (() => {
     pauseBtn.addEventListener('click', togglePause);
 
     // Touch control buttons — with repeat-on-hold for directional buttons
-    function startRepeat(action) {
-      if (gameOver || paused || clearingRows) return;
-      action();
-      if (touchRepeatTimer) clearTimeout(touchRepeatTimer);
-      touchRepeatTimer = setTimeout(() => {
-        if (gameOver || paused) { stopRepeat(); return; }
-        touchRepeatInterval = setInterval(() => {
-          if (gameOver || paused) { stopRepeat(); return; }
-          action();
-        }, 50);
-      }, 150);
-    }
-    function stopRepeat() {
-      if (touchRepeatTimer) { clearTimeout(touchRepeatTimer); touchRepeatTimer = null; }
-      if (touchRepeatInterval) { clearInterval(touchRepeatInterval); touchRepeatInterval = null; }
-    }
-
     function bindTouchBtn(id, action, repeatable) {
       const el = document.getElementById(id);
       if (!el) return;

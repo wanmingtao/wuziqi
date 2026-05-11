@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Doodle Jump</title>
+  <link rel="stylesheet" href="css/doodle.css">
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+
+<div class="doodle-app">
+  <div class="hud">
+    <div class="hud-item">
+      <span class="hud-label">分数</span>
+      <span class="hud-value" id="scoreDisplay">0</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">最高</span>
+      <span class="hud-value" id="bestDisplay">0</span>
+    </div>
+  </div>
+
+  <div class="game-container">
+    <canvas id="gameCanvas"></canvas>
+    <div class="overlay hidden" id="overlay">
+      <div class="overlay-content" id="overlayContent">
+        <h2>游戏结束</h2>
+        <p id="finalScore">得分: 0</p>
+        <div class="overlay-actions">
+          <button class="btn btn-primary" id="restartBtn">再来一局</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="control-bar">
+    <button class="btn btn-secondary" id="pauseBtn">暂停</button>
+    <button class="btn btn-primary" id="newGameBtn">新游戏</button>
+  </div>
+
+  <p class="hint">← → 移动 &nbsp; 触碰平台自动弹跳</p>
+
+  <div class="touch-controls" id="touchControls">
+    <div class="touch-row">
+      <button class="touch-btn touch-left" id="touchLeft">◀</button>
+      <button class="touch-btn touch-right" id="touchRight">▶</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/doodle.js"></script>
+</body>
+</html>
