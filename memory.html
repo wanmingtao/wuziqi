@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>记忆翻牌</title>
+  <link rel="stylesheet" href="css/memory.css">
+</head>
+<body>
+<canvas id="bgCanvas"></canvas>
+<div class="app">
+  <div class="hud">
+    <div class="hud-item"><span class="hud-label">步数</span><span class="hud-value" id="movesDisplay">0</span></div>
+    <div class="hud-item"><span class="hud-label">配对</span><span class="hud-value" id="matchesDisplay">0/8</span></div>
+    <div class="hud-item"><span class="hud-label">时间</span><span class="hud-value" id="timerDisplay">0s</span></div>
+    <div class="hud-item"><span class="hud-label">最佳</span><span class="hud-value" id="bestDisplay">-</span></div>
+  </div>
+  <div class="game-container">
+    <div class="cards-grid" id="cardsGrid"></div>
+    <div class="overlay hidden" id="overlay">
+      <div class="overlay-content">
+        <h2 id="resultTitle">恭喜通关！</h2>
+        <p id="resultScore"></p>
+        <button class="btn btn-primary" id="restartBtn">再来一局</button>
+      </div>
+    </div>
+  </div>
+  <div class="control-bar">
+    <div class="difficulty-toggle">
+      <button class="toggle-btn active" data-mode="easy">4×4</button>
+      <button class="toggle-btn" data-mode="hard">4×5</button>
+    </div>
+    <button class="btn btn-primary" id="newGameBtn">新游戏</button>
+  </div>
+  <p class="hint">点击卡牌翻开配对</p>
+</div>
+<script src="js/memory.js"></script>
+</body>
+</html>

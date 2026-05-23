@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>扫雷</title>
+  <link rel="stylesheet" href="css/minesweeper.css">
+</head>
+<body>
+<canvas id="bgCanvas"></canvas>
+<div class="app">
+  <div class="hud">
+    <div class="hud-item"><span class="hud-label">剩余</span><span class="hud-value" id="minesDisplay">10</span></div>
+    <div class="hud-item"><span class="hud-label">时间</span><span class="hud-value" id="timerDisplay">0s</span></div>
+    <div class="hud-item"><span class="hud-label">最佳</span><span class="hud-value" id="bestDisplay">-</span></div>
+  </div>
+  <div class="game-container">
+    <canvas id="gameCanvas"></canvas>
+    <div class="overlay hidden" id="overlay">
+      <div class="overlay-content">
+        <h2 id="resultTitle">游戏结束</h2>
+        <p id="resultScore"></p>
+        <button class="btn btn-primary" id="restartBtn">再来一局</button>
+      </div>
+    </div>
+  </div>
+  <div class="control-bar">
+    <button class="btn btn-secondary" id="flagBtn">🚩 标旗模式</button>
+    <div class="difficulty-toggle">
+      <button class="toggle-btn" data-mode="easy">简单</button>
+      <button class="toggle-btn active" data-mode="medium">中等</button>
+      <button class="toggle-btn" data-mode="hard">困难</button>
+    </div>
+    <button class="btn btn-primary" id="newGameBtn">新游戏</button>
+  </div>
+  <p class="hint">左键翻开 / 右键标旗 / 长按标旗</p>
+</div>
+<script src="js/minesweeper.js"></script>
+</body>
+</html>
