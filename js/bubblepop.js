@@ -25,9 +25,9 @@
   const SPEED = 8;
 
   let grid, currentBubble, nextColor, aimAngle;
-  let score, bestScore, combo, shotsFired;
-  let gameOver, shooting, particles;
-  let mouseX, mouseY, isAiming;
+  let score = 0, bestScore = 0, combo = 0, shotsFired = 0;
+  let gameOver = false, shooting = false, particles = [];
+  let mouseX = 0, mouseY = 0, isAiming = false;
 
   function loadBest() {
     bestScore = parseInt(localStorage.getItem('bestBubblePop') || '0');
