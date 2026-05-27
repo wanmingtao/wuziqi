@@ -89,6 +89,10 @@
       updateUI();
       saveBest();
       spawnParticles(food.x * CELL + CELL / 2, food.y * CELL + CELL / 2, food.type === 'bonus' ? '#d500f9' : '#ff1744', 8);
+      // GSAP: brief scale pulse on canvas when eating food
+      if (typeof gsap !== 'undefined') {
+        gsap.fromTo(canvas, { scale: 1.05 }, { scale: 1, duration: 0.3, ease: 'back.out(2)' });
+      }
       spawnFood();
       // Speed up
       if (score % 5 === 0) {
@@ -109,6 +113,13 @@
     spawnParticles(snake[0].x * CELL + CELL / 2, snake[0].y * CELL + CELL / 2, '#ff1744', 20);
     resultScore.textContent = '得分: ' + score;
     overlay.classList.remove('hidden');
+    // GSAP: elastic scale entrance on game over overlay
+    if (typeof gsap !== 'undefined') {
+      gsap.fromTo(overlay.querySelector('.overlay-content'),
+        { scale: 0.3, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.6, ease: 'elastic.out(1, 0.5)' }
+      );
+    }
     clearInterval(gameTimer);
   }
 
@@ -121,6 +132,10 @@
   function updateUI() {
     scoreEl.textContent = score;
     lenEl.textContent = snake.length;
+    // GSAP: elastic scale bounce on score
+    if (typeof gsap !== 'undefined') {
+      gsap.fromTo(scoreEl, { scale: 1.5 }, { scale: 1, duration: 0.5, ease: 'elastic.out(1, 0.4)' });
+    }
   }
 
   function render() {
@@ -278,6 +293,18 @@
     pauseBtn.addEventListener('click', togglePause);
     newGameBtn.addEventListener('click', () => { clearInterval(gameTimer); resetGame(); });
     restartBtn.addEventListener('click', () => { clearInterval(gameTimer); resetGame(); });
+
+    // GSAP: new game button hover animation
+    if (typeof gsap !== 'undefined') {
+      [newGameBtn, restartBtn].forEach(btn => {
+        btn.addEventListener('mouseenter', () => {
+          gsap.to(btn, { scale: 1.1, duration: 0.3, ease: 'back.out(2)' });
+        });
+        btn.addEventListener('mouseleave', () => {
+          gsap.to(btn, { scale: 1, duration: 0.3, ease: 'power2.out' });
+        });
+      });
+    }
   }
 
   function togglePause() {

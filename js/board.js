@@ -74,9 +74,30 @@ const Board = (() => {
 
     /* ======== 动画接口 ======== */
     function animateDrop(row, col, player, done) {
-        dropAnim = { row, col, player, start: performance.now(), duration: DROP_DURATION };
-        onAnimDone = done || null;
-        startAnimLoop();
+        /* GSAP: elastic drop animation */
+        if (typeof gsap !== 'undefined') {
+            dropAnim = { row, col, player, scale: 0, done: false };
+            onAnimDone = done || null;
+            gsap.to(dropAnim, {
+                scale: 1,
+                duration: 0.4,
+                ease: 'elastic.out(1, 0.45)',
+                onComplete() {
+                    dropAnim.done = true;
+                    dropAnim = null;
+                    if (onAnimDone) {
+                        const cb = onAnimDone;
+                        onAnimDone = null;
+                        cb();
+                    }
+                },
+            });
+            startAnimLoop();
+        } else {
+            dropAnim = { row, col, player, start: performance.now(), duration: DROP_DURATION };
+            onAnimDone = done || null;
+            startAnimLoop();
+        }
     }
 
     function setWinCells(cells) {
@@ -216,16 +237,24 @@ const Board = (() => {
                 // 跳过正在做落子动画的棋子，在动画块绘制
                 if (dropAnim && dropAnim.row === r && dropAnim.col === c) continue;
 
-                const isWin = winCells && winCells.some(([wr, wc]) => wr === r && wc === c);
-                drawPiece(r, c, board[r][c], { isWin, winStart: winStart, now });
+                const winCell = winCells && winCells.find(([wr, wc]) => wr === r && wc === c);
+                const isWin = !!winCell;
+                drawPiece(r, c, board[r][c], { isWin, winStart: winStart, now, cell: winCell });
             }
         }
 
         /* ── 落子动画 ── */
         if (dropAnim) {
-            const elapsed = now - dropAnim.start;
-            const raw = Math.min(elapsed / dropAnim.duration, 1);
-            const t = easeOutBack(raw);
+            let t;
+            if (typeof gsap !== 'undefined' && dropAnim.scale !== undefined) {
+                t = dropAnim.scale;
+            } else if (dropAnim.start !== undefined) {
+                const elapsed = now - dropAnim.start;
+                const raw = Math.min(elapsed / dropAnim.duration, 1);
+                t = easeOutBack(raw);
+            } else {
+                t = 1;
+            }
             drawPiece(dropAnim.row, dropAnim.col, dropAnim.player, { scale: t });
         }
 
@@ -291,7 +320,7 @@ const Board = (() => {
     function drawPiece(row, col, player, opts = {}) {
         const { x, y } = gridToPixel(row, col);
         const radius = cellSize * 0.44;
-        const { isWin, winStart, now, scale, ghost } = opts;
+        const { isWin, winStart, now, scale, ghost, cell } = opts;
 
         ctx.save();
         const s = scale ?? 1;
@@ -369,7 +398,9 @@ const Board = (() => {
 
         /* 获胜高亮 */
         if (isWin) {
-            const pulse = 0.5 + 0.5 * Math.sin((now - winStart) * 0.005);
+            /* Use GSAP glow intensity if available, else fallback to sin pulse */
+            const glowVal = (cell && cell.glowIntensity !== undefined) ? cell.glowIntensity : null;
+            const pulse = glowVal !== null ? Math.max(0, Math.min(1, glowVal)) : (0.5 + 0.5 * Math.sin((now - winStart) * 0.005));
             const goldGrad = ctx.createRadialGradient(x, y, radius * 0.5, x, y, radius * 1.15);
             goldGrad.addColorStop(0, `rgba(255,215,0,${0.15 * pulse})`);
             goldGrad.addColorStop(1, `rgba(255,180,0,${0.5 * pulse})`);

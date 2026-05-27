@@ -56,6 +56,7 @@
           alive: true,
           color: BRICK_COLORS[r % BRICK_COLORS.length],
           hp: r < 2 ? 2 : 1,
+          destroyProgress: 1,
         });
       }
     }
@@ -103,6 +104,11 @@
         gameOver = true; saveBest();
         resultTitle.textContent = '游戏结束'; resultScore.textContent = '得分: ' + score;
         overlay.classList.remove('hidden');
+        // GSAP overlay elastic entrance
+        if (typeof gsap !== 'undefined') {
+          const content = overlay.querySelector('.overlay-content');
+          gsap.fromTo(content, { scale: 0.3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: 'elastic.out(1, 0.5)' });
+        }
         return;
       }
       ball.stuck = true;
@@ -120,6 +126,10 @@
       ball.vx = speed * Math.sin(angle);
       ball.vy = -speed * Math.cos(angle);
       ball.y = paddle.y - ball.r;
+      // GSAP paddle hit pulse
+      if (typeof gsap !== 'undefined') {
+        gsap.fromTo(canvas, { filter: 'brightness(1.3)' }, { filter: 'brightness(1)', duration: 0.15, ease: 'power2.out' });
+      }
       // Minimum speed
       if (Math.abs(ball.vy) < 3) ball.vy = -3;
     }
@@ -138,8 +148,17 @@
         brick.hp--;
         if (brick.hp <= 0) {
           brick.alive = false;
+          // GSAP brick break scale-down + fade
+          if (typeof gsap !== 'undefined') {
+            brick.destroyProgress = 1;
+            gsap.to(brick, { destroyProgress: 0, duration: 0.3, ease: 'power2.in' });
+          }
           score += 10 * (BRICK_ROWS - Math.floor((brick.y - BRICK_TOP) / (BRICK_H + 4)));
           updateUI();
+          // GSAP score bounce
+          if (typeof gsap !== 'undefined') {
+            gsap.fromTo(scoreEl, { scale: 1.4 }, { scale: 1, duration: 0.5, ease: 'elastic.out(1, 0.3)' });
+          }
           spawnParticles(brick.x + brick.w / 2, brick.y + brick.h / 2, brick.color, 8);
 
           // Powerup chance
@@ -158,6 +177,15 @@
       won = true; gameOver = true; saveBest();
       resultTitle.textContent = '恭喜通关！'; resultScore.textContent = '得分: ' + score;
       overlay.classList.remove('hidden');
+      // GSAP overlay elastic entrance + level-up flash
+      if (typeof gsap !== 'undefined') {
+        const content = overlay.querySelector('.overlay-content');
+        gsap.fromTo(content, { scale: 0.3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: 'elastic.out(1, 0.5)' });
+        const flash = document.createElement('div');
+        flash.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(118,255,3,0.3);pointer-events:none;z-index:100;';
+        document.body.appendChild(flash);
+        gsap.to(flash, { opacity: 0, duration: 0.6, ease: 'power2.out', onComplete() { flash.remove(); } });
+      }
       spawnParticles(W / 2, H / 2, '#f5a623', 30);
       return;
     }
@@ -194,9 +222,15 @@
 
     // Bricks
     for (const brick of bricks) {
-      if (!brick.alive) continue;
+      if (!brick.alive && (!brick.destroyProgress || brick.destroyProgress <= 0)) continue;
+      const dp = brick.alive ? 1 : (brick.destroyProgress || 0);
+      if (dp <= 0) continue;
       const alpha = brick.hp === 2 ? 1 : 0.7;
-      ctx.globalAlpha = alpha;
+      ctx.globalAlpha = alpha * dp;
+      ctx.save();
+      ctx.translate(brick.x + brick.w / 2, brick.y + brick.h / 2);
+      ctx.scale(dp, dp);
+      ctx.translate(-(brick.x + brick.w / 2), -(brick.y + brick.h / 2));
       ctx.shadowColor = brick.color;
       ctx.shadowBlur = 8;
       ctx.fillStyle = brick.color;
@@ -205,6 +239,7 @@
       ctx.shadowBlur = 0;
       ctx.fillStyle = 'rgba(255,255,255,0.15)';
       ctx.fillRect(brick.x + 3, brick.y + 2, brick.w - 6, brick.h * 0.4);
+      ctx.restore();
       ctx.globalAlpha = 1;
     }
 

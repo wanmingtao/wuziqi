@@ -29,6 +29,10 @@
   let gameOver = false, shooting = false, particles = [];
   let mouseX = 0, mouseY = 0, isAiming = false;
 
+  // GSAP animation state
+  const gsapBubbleScale = {};
+  const gsapBubbleAlpha = {};
+
   function loadBest() {
     bestScore = parseInt(localStorage.getItem('bestBubblePop') || '0');
     bestEl.textContent = bestScore;
@@ -162,24 +166,68 @@
 
   function removeBubbles(group) {
     combo++;
-    for (const [r, c] of group) {
+    for (let i = 0; i < group.length; i++) {
+      const [r, c] = group[i];
       spawnBubbleParticles(hexX(r, c), hexY(r, c), grid[r][c]);
-      grid[r][c] = null;
+      // GSAP stagger pop animation
+      if (typeof gsap !== 'undefined') {
+        const popKey = r + ',' + c;
+        gsapBubbleScale[popKey] = 1;
+        gsapBubbleAlpha[popKey] = 1;
+        gsap.to(gsapBubbleScale, { [popKey]: 0, duration: 0.3, delay: i * 0.06, ease: 'back.in(2)' });
+        gsap.to(gsapBubbleAlpha, { [popKey]: 0, duration: 0.3, delay: i * 0.06, ease: 'power2.in', onComplete: () => { delete gsapBubbleScale[popKey]; delete gsapBubbleAlpha[popKey]; grid[r][c] = null; } });
+      } else {
+        grid[r][c] = null;
+      }
     }
     score += group.length * 10 * combo;
     scoreEl.textContent = score;
     comboEl.textContent = combo;
     saveBest();
+    // GSAP score bounce
+    if (typeof gsap !== 'undefined') {
+      gsap.fromTo(scoreEl, { scale: 1.5 }, { scale: 1, duration: 0.5, ease: 'elastic.out(1, 0.3)' });
+      gsap.fromTo(comboEl, { scale: 1.5 }, { scale: 1, duration: 0.5, ease: 'elastic.out(1, 0.3)' });
+      // Combo text animation
+      showComboText(combo, group.length * 10 * combo);
+    }
   }
 
   function dropFloating(floating) {
-    for (const [r, c] of floating) {
+    for (let i = 0; i < floating.length; i++) {
+      const [r, c] = floating[i];
       spawnBubbleParticles(hexX(r, c), hexY(r, c), grid[r][c]);
-      grid[r][c] = null;
+      // GSAP stagger drop pop animation
+      if (typeof gsap !== 'undefined') {
+        const popKey = r + ',' + c;
+        gsapBubbleScale[popKey] = 1;
+        gsapBubbleAlpha[popKey] = 1;
+        gsap.to(gsapBubbleScale, { [popKey]: 0, duration: 0.4, delay: i * 0.04, ease: 'back.in(2)' });
+        gsap.to(gsapBubbleAlpha, { [popKey]: 0, duration: 0.4, delay: i * 0.04, ease: 'power2.in', onComplete: () => { delete gsapBubbleScale[popKey]; delete gsapBubbleAlpha[popKey]; grid[r][c] = null; } });
+      } else {
+        grid[r][c] = null;
+      }
     }
     score += floating.length * 20;
     scoreEl.textContent = score;
     saveBest();
+  }
+
+  function showComboText(comboNum, points) {
+    if (comboNum < 2) return;
+    const text = document.createElement('div');
+    text.textContent = comboNum + 'x 连击! +' + points;
+    text.style.cssText = 'position:absolute;top:120px;left:50%;transform:translateX(-50%);color:#ffd600;font-size:24px;font-weight:bold;text-shadow:0 0 10px rgba(255,214,0,0.5);pointer-events:none;z-index:100;white-space:nowrap;';
+    const container = document.querySelector('.game-container');
+    container.style.position = 'relative';
+    container.appendChild(text);
+    gsap.fromTo(text,
+      { y: 0, opacity: 0, scale: 0.3 },
+      { y: -60, opacity: 1, scale: 1, duration: 0.5, ease: 'elastic.out(1, 0.5)',
+        onComplete: () => {
+          gsap.to(text, { opacity: 0, y: -100, duration: 0.5, delay: 0.5, onComplete: () => { text.remove(); } });
+        }
+      });
   }
 
   function spawnBubbleParticles(x, y, colorIdx) {
@@ -256,6 +304,11 @@
     resultTitle.textContent = won ? '恭喜通关！' : '游戏结束';
     resultScore.textContent = '得分: ' + score;
     overlay.classList.remove('hidden');
+    // GSAP overlay entrance
+    if (typeof gsap !== 'undefined') {
+      gsap.fromTo(overlay.querySelector('.overlay-content'),
+        { scale: 0.3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.7, ease: 'elastic.out(1, 0.5)' });
+    }
   }
 
   function shoot() {
@@ -342,11 +395,17 @@
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, W, H);
 
-    // Grid bubbles
+    // Grid bubbles with GSAP pop animation
     for (let r = 0; r < ROWS; r++) {
       for (let c = 0; c < colCount(r); c++) {
         if (grid[r][c] === null) continue;
-        drawBubble(hexX(r, c), hexY(r, c), grid[r][c]);
+        const popKey = r + ',' + c;
+        const popScale = gsapBubbleScale[popKey] !== undefined ? gsapBubbleScale[popKey] : 1;
+        const popAlpha = gsapBubbleAlpha[popKey] !== undefined ? gsapBubbleAlpha[popKey] : 1;
+        if (popAlpha <= 0) continue;
+        ctx.globalAlpha = popAlpha;
+        drawBubble(hexX(r, c), hexY(r, c), grid[r][c], BUBBLE_R * popScale);
+        ctx.globalAlpha = 1;
       }
     }
 
@@ -528,6 +587,10 @@
   function updateUI() {
     scoreEl.textContent = score;
     comboEl.textContent = combo;
+    // GSAP score bounce
+    if (typeof gsap !== 'undefined' && score > 0) {
+      gsap.fromTo(scoreEl, { scale: 1.3 }, { scale: 1, duration: 0.4, ease: 'elastic.out(1, 0.4)' });
+    }
   }
 
   function loop() {

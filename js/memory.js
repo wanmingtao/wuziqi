@@ -134,7 +134,18 @@
     if (idx === firstPick) return;
 
     card.flipped = true;
-    cardEl.classList.add('flipped');
+    // GSAP card flip animation
+    if (typeof gsap !== 'undefined') {
+      gsap.fromTo(cardEl, { scaleX: 1 }, {
+        scaleX: 0, duration: 0.15, ease: 'power2.in',
+        onComplete() {
+          cardEl.classList.add('flipped');
+          gsap.fromTo(cardEl, { scaleX: 0 }, { scaleX: 1, duration: 0.3, ease: 'back.out(1.7)' });
+        }
+      });
+    } else {
+      cardEl.classList.add('flipped');
+    }
 
     if (!timerInterval) startTimer();
 
@@ -146,6 +157,10 @@
     secondPick = idx;
     moves++;
     movesEl.textContent = moves;
+    // GSAP score bounce
+    if (typeof gsap !== 'undefined') {
+      gsap.fromTo(movesEl, { scale: 1.4 }, { scale: 1, duration: 0.5, ease: 'elastic.out(1, 0.3)' });
+    }
     isChecking = true;
 
     if (cards[firstPick].pairId === cards[secondPick].pairId) {
@@ -160,6 +175,11 @@
         const allCards = cardsGrid.children;
         allCards[firstPick].classList.add('matched');
         allCards[secondPick].classList.add('matched');
+        // GSAP match bounce
+        if (typeof gsap !== 'undefined') {
+          gsap.fromTo(allCards[firstPick], { scale: 1.15 }, { scale: 1, duration: 0.6, ease: 'elastic.out(1, 0.3)' });
+          gsap.fromTo(allCards[secondPick], { scale: 1.15 }, { scale: 1, duration: 0.6, ease: 'elastic.out(1, 0.3)' });
+        }
 
         firstPick = -1; secondPick = -1;
         isChecking = false;
@@ -171,6 +191,11 @@
           resultTitle.textContent = '恭喜通关！';
           resultScore.textContent = '用了 ' + moves + ' 步，耗时 ' + timer + ' 秒';
           overlay.classList.remove('hidden');
+          // GSAP overlay elastic entrance
+          if (typeof gsap !== 'undefined') {
+            const content = overlay.querySelector('.overlay-content');
+            gsap.fromTo(content, { scale: 0.3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: 'elastic.out(1, 0.5)' });
+          }
           spawnWinParticles();
         }
       }, 300);
@@ -180,14 +205,26 @@
         cards[firstPick].flipped = false;
         cards[secondPick].flipped = false;
         const allCards = cardsGrid.children;
-        allCards[firstPick].classList.add('shake');
-        allCards[secondPick].classList.add('shake');
-        setTimeout(() => {
-          allCards[firstPick].classList.remove('flipped', 'shake');
-          allCards[secondPick].classList.remove('flipped', 'shake');
-        }, 400);
-        firstPick = -1; secondPick = -1;
-        isChecking = false;
+        // GSAP mismatch shake
+        if (typeof gsap !== 'undefined') {
+          gsap.to(allCards[firstPick], { x: -6, duration: 0.06, yoyo: true, repeat: 5, ease: 'power2.inOut', onComplete() {
+            gsap.set(allCards[firstPick], { x: 0 });
+            allCards[firstPick].classList.remove('flipped');
+          }});
+          gsap.to(allCards[secondPick], { x: -6, duration: 0.06, yoyo: true, repeat: 5, ease: 'power2.inOut', onComplete() {
+            gsap.set(allCards[secondPick], { x: 0 });
+            allCards[secondPick].classList.remove('flipped');
+          }});
+          setTimeout(() => { firstPick = -1; secondPick = -1; isChecking = false; }, 600);
+        } else {
+          allCards[firstPick].classList.add('shake');
+          allCards[secondPick].classList.add('shake');
+          setTimeout(() => {
+            allCards[firstPick].classList.remove('flipped', 'shake');
+            allCards[secondPick].classList.remove('flipped', 'shake');
+            firstPick = -1; secondPick = -1; isChecking = false;
+          }, 400);
+        }
       }, 600);
     }
   }

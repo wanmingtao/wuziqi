@@ -25,6 +25,10 @@
   let particles = [];
   let animFrameId;
 
+  // GSAP animation state
+  const gsapPopScale = {};
+  const gsapGlowIntensity = {};
+
   const WIN_COMBOS = [
     [0,1,2],[3,4,5],[6,7,8], // rows
     [0,3,6],[1,4,7],[2,5,8], // cols
@@ -69,6 +73,12 @@
       particles.push({x: cx, y: cy, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed, r: Math.random()*3+1, life: 1, color});
     }
 
+    // GSAP piece pop animation
+    if (typeof gsap !== 'undefined') {
+      gsapPopScale[index] = 1.4;
+      gsap.to(gsapPopScale, { [index]: 1, duration: 0.6, ease: 'elastic.out(1, 0.3)', overwrite: true });
+    }
+
     const win = checkWin(current);
     if (win) {
       gameOver = true;
@@ -76,20 +86,52 @@
       winAnimProgress = 0;
       if (current === 1) { xWins++; xWinsEl.textContent = xWins; }
       else { oWins++; oWinsEl.textContent = oWins; }
-      setTimeout(() => {
-        resultTitle.textContent = current === 1 ? '✕ 获胜！' : '○ 获胜！';
-        resultText.textContent = `${current === 1 ? '✕' : '○'} 连成一线`;
-        overlay.classList.remove('hidden');
-      }, 800);
+      // GSAP win animations
+      if (typeof gsap !== 'undefined') {
+        // Win line glow stagger on cells
+        win.forEach((idx, i) => {
+          gsapGlowIntensity[idx] = 0;
+          gsap.to(gsapGlowIntensity, { [idx]: 1, duration: 0.4, delay: i * 0.15, ease: 'power2.out' });
+        });
+        // Score bounce
+        const scoreEl = current === 1 ? xWinsEl : oWinsEl;
+        gsap.fromTo(scoreEl, { scale: 1.5 }, { scale: 1, duration: 0.6, ease: 'elastic.out(1, 0.3)' });
+        // Overlay entrance
+        setTimeout(() => {
+          resultTitle.textContent = current === 1 ? '✕ 获胜！' : '○ 获胜！';
+          resultText.textContent = `${current === 1 ? '✕' : '○'} 连成一线`;
+          overlay.classList.remove('hidden');
+          gsap.fromTo(overlay.querySelector('.overlay-content'),
+            { scale: 0.3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.7, ease: 'elastic.out(1, 0.5)' });
+        }, 800);
+      } else {
+        setTimeout(() => {
+          resultTitle.textContent = current === 1 ? '✕ 获胜！' : '○ 获胜！';
+          resultText.textContent = `${current === 1 ? '✕' : '○'} 连成一线`;
+          overlay.classList.remove('hidden');
+        }, 800);
+      }
       return;
     }
     if (checkDraw()) {
       gameOver = true;
-      setTimeout(() => {
-        resultTitle.textContent = '🤝 平局！';
-        resultText.textContent = '势均力敌';
-        overlay.classList.remove('hidden');
-      }, 500);
+      if (typeof gsap !== 'undefined') {
+        // Draw shake on canvas
+        gsap.fromTo(canvas, { x: -8 }, { x: 8, duration: 0.06, repeat: 5, yoyo: true, ease: 'power2.inOut', onComplete: () => { gsap.set(canvas, { x: 0 }); } });
+        setTimeout(() => {
+          resultTitle.textContent = '🤝 平局！';
+          resultText.textContent = '势均力敌';
+          overlay.classList.remove('hidden');
+          gsap.fromTo(overlay.querySelector('.overlay-content'),
+            { scale: 0.3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.7, ease: 'elastic.out(1, 0.5)' });
+        }, 500);
+      } else {
+        setTimeout(() => {
+          resultTitle.textContent = '🤝 平局！';
+          resultText.textContent = '势均力敌';
+          overlay.classList.remove('hidden');
+        }, 500);
+      }
       return;
     }
 
@@ -173,8 +215,14 @@
       // find animation progress
       const anim = drawAnims.find(a => a.index === i);
       let progress = anim ? anim.progress : (board[i] !== 0 ? 1 : 0);
+      const popScale = gsapPopScale[i] || 1;
 
       if (board[i] === 1 && progress > 0) {
+        // GSAP pop scale effect
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.scale(popScale, popScale);
+        ctx.translate(-cx, -cy);
         // draw X
         const grad = ctx.createLinearGradient(cx-pad, cy-pad, cx+pad, cy+pad);
         grad.addColorStop(0, '#ff4040');
@@ -201,9 +249,15 @@
         ctx.shadowBlur = 10 * progress;
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
+        ctx.restore();
       }
 
       if (board[i] === 2 && progress > 0) {
+        // GSAP pop scale effect
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.scale(popScale, popScale);
+        ctx.translate(-cx, -cy);
         // draw O
         const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, pad);
         grad.addColorStop(0, '#80d0ff');
@@ -219,6 +273,7 @@
         ctx.shadowBlur = 10 * progress;
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
+        ctx.restore();
       }
     }
 

@@ -242,6 +242,12 @@ const Game2048 = (() => {
     }
     keepGoingBtn.style.display = isWin ? '' : 'none';
     overlay.classList.add('show');
+    // GSAP overlay entrance
+    if (typeof gsap !== 'undefined') {
+      const content = overlay.querySelector('.overlay-content');
+      gsap.fromTo(overlay, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: 'power2.out' });
+      gsap.fromTo(content, { scale: 0.7, y: 30 }, { scale: 1, y: 0, duration: 0.5, ease: 'back.out(1.5)' });
+    }
   }
 
   function render() {
@@ -276,15 +282,26 @@ const Game2048 = (() => {
       if (tile.isMerged) cls += ' tile-merged';
       if (tile.isNew) cls += ' tile-new';
       el.className = cls;
+
+      // GSAP tile animations
+      if (typeof gsap !== 'undefined') {
+        if (tile.isNew) {
+          gsap.fromTo(el, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(2)' });
+        }
+        if (tile.isMerged) {
+          gsap.fromTo(el, { scale: 0.7 }, { scale: 1, duration: 0.3, ease: 'elastic.out(1.2, 0.5)' });
+        }
+      }
     }
   }
 
   function updateScore() {
     scoreDisplay.textContent = score;
     bestDisplay.textContent = bestScore;
-    scoreDisplay.classList.remove('pop');
-    void scoreDisplay.offsetWidth;
-    scoreDisplay.classList.add('pop');
+    // GSAP score pop
+    if (typeof gsap !== 'undefined') {
+      gsap.fromTo(scoreDisplay, { scale: 1.4 }, { scale: 1, duration: 0.35, ease: 'elastic.out(1, 0.4)' });
+    }
   }
 
   function initBgParticles() {
@@ -414,17 +431,17 @@ const Game2048 = (() => {
     });
 
     let tsX = 0, tsY = 0;
-    gridContainer.addEventListener('touchstart', e => {
+    document.addEventListener('touchstart', e => {
       tsX = e.touches[0].clientX; tsY = e.touches[0].clientY;
     }, { passive: true });
-    gridContainer.addEventListener('touchend', e => {
+    document.addEventListener('touchend', e => {
       const dx = e.changedTouches[0].clientX - tsX;
       const dy = e.changedTouches[0].clientY - tsY;
       handleSwipe(dx, dy);
     }, { passive: true });
 
     let msX = 0, msY = 0, msDown = false;
-    gridContainer.addEventListener('mousedown', e => {
+    document.addEventListener('mousedown', e => {
       msX = e.clientX; msY = e.clientY; msDown = true;
     });
     document.addEventListener('mouseup', e => {

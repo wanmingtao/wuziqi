@@ -236,6 +236,24 @@ const App = (() => {
             // 连胜动画
             Board.setWinCells(winResult);
 
+            /* GSAP: stagger glow on winning line */
+            if (typeof gsap !== 'undefined') {
+                winResult.forEach((cell, i) => {
+                    const [r, c] = cell;
+                    gsap.fromTo(cell, { glowIntensity: 0 }, {
+                        glowIntensity: 1.2,
+                        duration: 0.4,
+                        delay: i * 0.08,
+                        ease: 'elastic.out(1, 0.5)',
+                        yoyo: true,
+                        repeat: 1,
+                        onComplete() {
+                            gsap.to(cell, { glowIntensity: 0.7, duration: 0.5, ease: 'power2.inOut' });
+                        },
+                    });
+                });
+            }
+
             // 庆祝特效
             const winPoints = winResult.map(([r, c]) => {
                 const { x, y } = Board.gridToPixel(r, c);
@@ -321,6 +339,16 @@ const App = (() => {
         Board.render(makeRenderState());
         updateStatus();
         els.undoBtn.disabled = state.moveHistory.length === 0;
+
+        /* GSAP: brief undo animation on the board */
+        if (typeof gsap !== 'undefined') {
+            gsap.fromTo(els.canvas, { scale: 0.97 }, {
+                scale: 1,
+                duration: 0.3,
+                ease: 'elastic.out(1, 0.4)',
+                clearProps: 'transform',
+            });
+        }
     }
 
     /* ======== 新游戏 ======== */
@@ -358,6 +386,18 @@ const App = (() => {
         els.modalIcon.classList.add('pop');
 
         els.modal.classList.add('show');
+
+        /* GSAP: elastic entrance for game over overlay */
+        if (typeof gsap !== 'undefined') {
+            const modalBox = els.modal.querySelector('.modal');
+            gsap.fromTo(modalBox, { scale: 0.3, opacity: 0 }, {
+                scale: 1,
+                opacity: 1,
+                duration: 0.6,
+                ease: 'elastic.out(1, 0.5)',
+                clearProps: 'transform,opacity',
+            });
+        }
     }
 
     function showDraw() {
@@ -368,6 +408,18 @@ const App = (() => {
         void els.modalIcon.offsetWidth;
         els.modalIcon.classList.add('pop');
         els.modal.classList.add('show');
+
+        /* GSAP: elastic entrance for draw overlay */
+        if (typeof gsap !== 'undefined') {
+            const modalBox = els.modal.querySelector('.modal');
+            gsap.fromTo(modalBox, { scale: 0.3, opacity: 0 }, {
+                scale: 1,
+                opacity: 1,
+                duration: 0.6,
+                ease: 'elastic.out(1, 0.5)',
+                clearProps: 'transform,opacity',
+            });
+        }
     }
 
     /* ======== 状态栏 ======== */
@@ -409,6 +461,15 @@ const App = (() => {
             el.classList.remove('bump');
             void el.offsetWidth;
             el.classList.add('bump');
+            /* GSAP: elastic bounce on score update */
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo(el, { scale: 1 }, {
+                    scale: 1.4,
+                    duration: 0.35,
+                    ease: 'elastic.out(1, 0.35)',
+                    clearProps: 'transform',
+                });
+            }
         }
     }
 

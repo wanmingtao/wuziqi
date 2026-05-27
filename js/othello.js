@@ -25,6 +25,11 @@
   let validMoves = [];
   let animFrameId;
 
+  // GSAP animation state
+  const gsapDropScale = {};
+  const gsapFlipProgress = {};
+  let gsapHintPulse = 0;
+
   function init() {
     if (animFrameId) cancelAnimationFrame(animFrameId);
     board = Array.from({length: 8}, () => Array(8).fill(0));
@@ -71,9 +76,28 @@
     board[r][c] = current;
     const flips = getFlips(r, c, current);
     spawnParticles(c * CELL + CELL / 2, r * CELL + CELL / 2, current === 1 ? '#444' : '#fff');
+    // GSAP piece drop animation
+    if (typeof gsap !== 'undefined') {
+      const dropKey = r + ',' + c;
+      gsapDropScale[dropKey] = 0;
+      gsap.to(gsapDropScale, { [dropKey]: 1, duration: 0.5, ease: 'elastic.out(1, 0.4)' });
+    }
     // animate flips
     animating = true;
     flipAnim = flips.map(([fr, fc]) => ({r: fr, c: fc, progress: 0}));
+    // GSAP flip animations with stagger
+    if (typeof gsap !== 'undefined') {
+      flips.forEach(([fr, fc], i) => {
+        const flipKey = fr + ',' + fc;
+        gsapFlipProgress[flipKey] = { scaleX: 1 };
+        gsap.to(gsapFlipProgress[flipKey], {
+          scaleX: 0, duration: 0.15, delay: i * 0.08,
+          onComplete: () => {
+            gsap.to(gsapFlipProgress[flipKey], { scaleX: 1, duration: 0.25, ease: 'elastic.out(1, 0.5)' });
+          }
+        });
+      });
+    }
     let idx = 0;
     const flipInterval = setInterval(() => {
       if (idx < flipAnim.length) {
@@ -129,6 +153,11 @@
     resultTitle.textContent = black > white ? '⚫ 黑棋获胜！' : white > black ? '⚪ 白棋获胜！' : '🤝 平局！';
     resultText.textContent = `黑棋 ${black} : ${white} 白棋`;
     overlay.classList.remove('hidden');
+    // GSAP overlay entrance
+    if (typeof gsap !== 'undefined') {
+      gsap.fromTo(overlay.querySelector('.overlay-content'),
+        { scale: 0.3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.7, ease: 'elastic.out(1, 0.5)' });
+    }
   }
 
   function updateHUD() {
@@ -137,6 +166,11 @@
     blackCountEl.textContent = black;
     whiteCountEl.textContent = white;
     turnDisplay.textContent = current === 1 ? '黑棋' : '白棋';
+    // GSAP score bounce
+    if (typeof gsap !== 'undefined') {
+      const targetEl = current === 1 ? blackCountEl : whiteCountEl;
+      gsap.fromTo(targetEl, { scale: 1.4 }, { scale: 1, duration: 0.5, ease: 'elastic.out(1, 0.3)' });
+    }
   }
 
   function spawnParticles(x, y, color) {
@@ -165,9 +199,13 @@
     for (const [sr, sc] of [[2,2],[2,6],[6,2],[6,6]]) {
       ctx.beginPath(); ctx.arc(sc*CELL, sr*CELL, 4, 0, Math.PI*2); ctx.fill();
     }
-    // valid moves highlight
+    // valid moves highlight with GSAP pulse
+    if (typeof gsap !== 'undefined') {
+      gsapHintPulse += 0.03;
+    }
     for (const [r, c] of validMoves) {
-      ctx.fillStyle = `rgba(${current===1?'80,200,80':'200,200,80'},0.25)`;
+      const pulseAlpha = 0.15 + Math.sin(gsapHintPulse) * 0.1;
+      ctx.fillStyle = `rgba(${current===1?'80,200,80':'200,200,80'},${pulseAlpha})`;
       ctx.fillRect(c*CELL+2, r*CELL+2, CELL-4, CELL-4);
     }
     // pieces
@@ -178,6 +216,15 @@
         const cy = r * CELL + CELL / 2;
         const rad = CELL * 0.4;
         const isBlack = board[r][c] === 1;
+        // GSAP drop and flip animation
+        const dropKey = r + ',' + c;
+        const dropScale = gsapDropScale[dropKey] !== undefined ? gsapDropScale[dropKey] : 1;
+        const flipKey = r + ',' + c;
+        const flipScaleX = gsapFlipProgress[flipKey] ? gsapFlipProgress[flipKey].scaleX : 1;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.scale(dropScale * flipScaleX, dropScale);
+        ctx.translate(-cx, -cy);
         // shadow
         ctx.beginPath();
         ctx.arc(cx+2, cy+2, rad, 0, Math.PI*2);
@@ -196,8 +243,7 @@
         ctx.arc(cx, cy, rad, 0, Math.PI*2);
         ctx.fillStyle = grad;
         ctx.fill();
-        // glow for last move
-      }
+        ctx.restore();
     }
     // particles
     for (let i = particles.length - 1; i >= 0; i--) {

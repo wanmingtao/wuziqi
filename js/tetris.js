@@ -183,6 +183,11 @@ const Tetris = (() => {
       saveBest();
       overlayScore.textContent = '得分: ' + score + '  等级: ' + level;
       gameOverlay.classList.add('show');
+      // GSAP: elastic entrance on game over overlay
+      if (typeof gsap !== 'undefined') {
+        gsap.fromTo(gameOverlay, { scale: 0.3, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.6, ease: 'elastic.out(1, 0.5)' });
+      }
       if (animFrameId) cancelAnimationFrame(animFrameId);
     }
     canHold = true;
@@ -284,6 +289,10 @@ const Tetris = (() => {
     score += dist * 2;
     dropTimer = 0;
     updateScore();
+    // GSAP: brief canvas shake on hard drop
+    if (typeof gsap !== 'undefined' && dist > 2) {
+      gsap.fromTo(boardCanvas, { y: -4 }, { y: 0, duration: 0.25, ease: 'elastic.out(1, 0.5)' });
+    }
     lockPiece();
   }
 
@@ -334,6 +343,11 @@ const Tetris = (() => {
       saveBest();
       overlayScore.textContent = '得分: ' + score + '  等级: ' + level;
       gameOverlay.classList.add('show');
+      // GSAP: elastic entrance on game over overlay
+      if (typeof gsap !== 'undefined') {
+        gsap.fromTo(gameOverlay, { scale: 0.3, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.6, ease: 'elastic.out(1, 0.5)' });
+      }
       if (animFrameId) cancelAnimationFrame(animFrameId);
       return;
     }
@@ -375,12 +389,26 @@ const Tetris = (() => {
       level = newLevel;
       dropInterval = Math.max(40, 800 - (level - 1) * 60);
       updateLevel();
+      // GSAP: level up border glow + score pulse
+      if (typeof gsap !== 'undefined') {
+        gsap.fromTo(boardWrapper, { boxShadow: '0 0 30px rgba(118,255,3,0.8), 0 0 60px rgba(118,255,3,0.4)' },
+          { boxShadow: '0 0 0px rgba(118,255,3,0)', duration: 1.2, ease: 'power2.out' });
+        gsap.fromTo(scoreDisplay, { scale: 1.6 }, { scale: 1, duration: 0.8, ease: 'elastic.out(1, 0.3)' });
+      }
     }
 
     // Effects
     if (count === 4) {
       boardWrapper.classList.add('shake');
       shakeTimer = 500;
+    }
+    // GSAP: line clear screen flash + shake
+    if (typeof gsap !== 'undefined') {
+      gsap.fromTo(boardWrapper, { x: -6 }, { x: 0, duration: 0.4, ease: 'elastic.out(1, 0.3)' });
+      if (count >= 2) {
+        gsap.fromTo(boardWrapper, { filter: 'brightness(1.8)' },
+          { filter: 'brightness(1)', duration: 0.3, ease: 'power2.out' });
+      }
     }
     if (combo > 1) {
       showComboToast(count, combo);
@@ -407,6 +435,10 @@ const Tetris = (() => {
     scoreDisplay.classList.remove('pop');
     void scoreDisplay.offsetWidth;
     scoreDisplay.classList.add('pop');
+    // GSAP: elastic scale bounce on score
+    if (typeof gsap !== 'undefined') {
+      gsap.fromTo(scoreDisplay, { scale: 1.5 }, { scale: 1, duration: 0.5, ease: 'elastic.out(1, 0.4)' });
+    }
   }
 
   function updateLevel() {

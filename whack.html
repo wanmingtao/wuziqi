@@ -5,16 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>打地鼠</title>
   <link rel="stylesheet" href="css/whack.css">
+  <script src="lib/gsap.min.js"></script>
+  <script src="lib/TextPlugin.min.js"></script>
 </head>
 <body>
 <canvas id="bgCanvas"></canvas>
+<div class="screen-flash" id="screenFlash"></div>
+<div class="border-glow" id="borderGlow"></div>
 <div class="app">
   <div class="hud">
-    <div class="hud-item">
+    <div class="hud-item" id="scoreHud">
       <span class="hud-label">🎯 分数</span>
       <span class="hud-value" id="scoreDisplay">0</span>
     </div>
-    <div class="hud-item">
+    <div class="hud-item" id="timeHud">
       <span class="hud-label">⏱️ 时间</span>
       <span class="hud-value" id="timeDisplay">30</span>
     </div>
@@ -23,17 +27,21 @@
       <span class="hud-value" id="bestDisplay">0</span>
     </div>
   </div>
-  <div class="game-container">
+  <div class="game-container" id="gameContainer">
     <canvas id="gameCanvas"></canvas>
+    <div class="combo-display" id="comboDisplay">
+      <div class="combo-text" id="comboText">🔥 x3</div>
+      <div class="combo-bar"><div class="combo-bar-fill" id="comboBarFill"></div></div>
+    </div>
     <div class="overlay" id="overlay">
-      <div class="overlay-content">
+      <div class="overlay-content" id="overlayContent">
         <h2 id="resultTitle">🔨 打地鼠</h2>
         <p id="resultText">点击地鼠获得分数，30秒限时挑战！</p>
         <button class="btn btn-primary" id="startBtn">开始游戏</button>
       </div>
     </div>
   </div>
-  <p class="hint">🖱️ 点击/触摸冒出的地鼠得分</p>
+  <p class="hint" id="hintText">🖱️ 点击/触摸冒出的地鼠得分</p>
 </div>
 <script src="js/whack.js"></script>
 </body>

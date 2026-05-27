@@ -227,6 +227,17 @@ const LinkGame = (() => {
   function selectTile(row, col) {
     selected = { row, col };
     tiles[row][col].classList.add('selected');
+    /* GSAP: scale pulse on select */
+    if (typeof gsap !== 'undefined') {
+      gsap.fromTo(tiles[row][col], { scale: 1 }, {
+        scale: 1.2,
+        duration: 0.15,
+        yoyo: true,
+        repeat: 1,
+        ease: 'back.out(3)',
+        clearProps: 'transform',
+      });
+    }
   }
 
   function deselectTile() {
@@ -251,6 +262,26 @@ const LinkGame = (() => {
       tiles[r1][c1].classList.add('matched');
       tiles[r2][c2].classList.remove('empty');
       tiles[r2][c2].classList.add('matched');
+
+      /* GSAP: elastic scale bounce then fade on matched tiles */
+      if (typeof gsap !== 'undefined') {
+        [tiles[r1][c1], tiles[r2][c2]].forEach(el => {
+          gsap.fromTo(el, { scale: 1 }, {
+            scale: 1.3,
+            duration: 0.2,
+            ease: 'elastic.out(1.2, 0.4)',
+            onComplete() {
+              gsap.to(el, {
+                scale: 0,
+                opacity: 0,
+                duration: 0.25,
+                ease: 'power2.in',
+                clearProps: 'transform,opacity',
+              });
+            },
+          });
+        });
+      }
 
       score += 10;
       pairsRemaining--;
@@ -277,6 +308,15 @@ const LinkGame = (() => {
   }
 
   function popValue(el) {
+    /* GSAP: elastic bounce on score update */
+    if (typeof gsap !== 'undefined') {
+      gsap.fromTo(el, { scale: 1 }, {
+        scale: 1.35,
+        duration: 0.35,
+        ease: 'elastic.out(1, 0.35)',
+        clearProps: 'transform',
+      });
+    }
     el.classList.remove('pop');
     void el.offsetWidth;
     el.classList.add('pop');
@@ -521,6 +561,20 @@ const LinkGame = (() => {
     tiles[a.r][a.c].classList.add('hint');
     tiles[b.r][b.c].classList.add('hint');
 
+    /* GSAP: subtle glow pulse on hint tiles */
+    if (typeof gsap !== 'undefined') {
+      [tiles[a.r][a.c], tiles[b.r][b.c]].forEach(el => {
+        gsap.fromTo(el, { boxShadow: '0 0 0px rgba(255,215,0,0)' }, {
+          boxShadow: '0 0 16px rgba(255,215,0,0.7)',
+          duration: 0.4,
+          yoyo: true,
+          repeat: 2,
+          ease: 'power2.inOut',
+          clearProps: 'boxShadow',
+        });
+      });
+    }
+
     if (hintTimeout) clearTimeout(hintTimeout);
     hintTimeout = setTimeout(() => {
       tiles[a.r][a.c].classList.remove('hint');
@@ -565,6 +619,18 @@ const LinkGame = (() => {
     }
 
     if (!silent) {
+      /* GSAP: stagger animation on shuffle */
+      if (typeof gsap !== 'undefined') {
+        const allTiles = gridEl.querySelectorAll('.tile:not(.empty)');
+        gsap.fromTo(allTiles, { scale: 0.6, opacity: 0.4 }, {
+          scale: 1,
+          opacity: 1,
+          duration: 0.35,
+          ease: 'back.out(2)',
+          stagger: 0.015,
+          clearProps: 'transform,opacity',
+        });
+      }
       gridEl.classList.remove('shuffling');
       void gridEl.offsetWidth;
       gridEl.classList.add('shuffling');
@@ -612,6 +678,24 @@ const LinkGame = (() => {
     overlayScore.textContent = `最终得分: ${score}`;
     overlayTime.textContent = `用时: ${formatTime(seconds)}`;
     winOverlay.classList.add('show');
+    /* GSAP: elastic entrance on win overlay */
+    if (typeof gsap !== 'undefined') {
+      const overlayContent = winOverlay.querySelector('.overlay-icon, h2, p, button');
+      gsap.fromTo(winOverlay, { opacity: 0 }, {
+        opacity: 1,
+        duration: 0.3,
+        ease: 'power2.out',
+      });
+      const children = winOverlay.children;
+      gsap.fromTo(children, { scale: 0.3, opacity: 0 }, {
+        scale: 1,
+        opacity: 1,
+        duration: 0.6,
+        ease: 'elastic.out(1, 0.5)',
+        stagger: 0.1,
+        clearProps: 'transform,opacity',
+      });
+    }
   }
 
   /* ---- Events ---- */

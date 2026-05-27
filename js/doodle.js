@@ -216,10 +216,45 @@
         player.vy = JUMP_VEL;
         player.onPlatform = true;
 
+        /* GSAP: jump canvas brief scale pulse */
+        if (typeof gsap !== 'undefined') {
+          gsap.fromTo(canvas, { scale: 1 }, {
+            scale: 1.03,
+            duration: 0.08,
+            yoyo: true,
+            repeat: 1,
+            ease: 'power2.out',
+            clearProps: 'transform',
+          });
+          /* GSAP: spring bounce on normal platforms (exaggerated) */
+          if (p.type === 'normal') {
+            gsap.fromTo(canvas, { scaleX: 1, scaleY: 1 }, {
+              scaleX: 1.06,
+              scaleY: 0.94,
+              duration: 0.06,
+              yoyo: true,
+              repeat: 1,
+              ease: 'elastic.out(1, 0.3)',
+              clearProps: 'transform',
+            });
+          }
+        }
+
         // Breakable platform
         if (p.type === 'breakable') {
           p.broken = true;
           spawnParticles(p.x + p.w / 2, p.y, '#ff1744', 6);
+          /* GSAP: platform break scale-down particle */
+          if (typeof gsap !== 'undefined') {
+            gsap.fromTo(canvas, { scale: 1 }, {
+              scale: 0.97,
+              duration: 0.1,
+              ease: 'power2.in',
+              onComplete() {
+                gsap.to(canvas, { scale: 1, duration: 0.2, ease: 'elastic.out(1, 0.4)', clearProps: 'transform' });
+              },
+            });
+          }
         }
 
         // Score
@@ -246,6 +281,16 @@
       saveBest();
       finalScoreEl.textContent = '得分: ' + score;
       overlay.classList.remove('hidden');
+      /* GSAP: game over overlay elastic entrance */
+      if (typeof gsap !== 'undefined') {
+        gsap.fromTo(overlayContent, { scale: 0.3, opacity: 0 }, {
+          scale: 1,
+          opacity: 1,
+          duration: 0.6,
+          ease: 'elastic.out(1, 0.5)',
+          clearProps: 'transform,opacity',
+        });
+      }
       spawnParticles(W / 2, H / 2, '#f5a623', 20);
       return;
     }
@@ -460,7 +505,17 @@
   }
 
   function updateScore() {
+    const prev = parseInt(scoreEl.textContent) || 0;
     scoreEl.textContent = score;
+    /* GSAP: score elastic bounce on change */
+    if (score > prev && typeof gsap !== 'undefined') {
+      gsap.fromTo(scoreEl, { scale: 1 }, {
+        scale: 1.35,
+        duration: 0.3,
+        ease: 'elastic.out(1, 0.35)',
+        clearProps: 'transform',
+      });
+    }
   }
   function updateBest() {
     bestEl.textContent = bestScore;

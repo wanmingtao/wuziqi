@@ -30,6 +30,7 @@
   let difficulty;
   let bestTime;
   let particles = [];
+  let _revealQueue = [];
 
   const NUM_COLORS = ['','#2979ff','#00c853','#ff1744','#1a237e','#880e4f','#00838f','#000','#666'];
 
@@ -55,7 +56,7 @@
     for (let r = 0; r < rows; r++) {
       grid[r] = [];
       for (let c = 0; c < cols; c++) {
-        grid[r][c] = { mine: false, revealed: false, flagged: false, adjacent: 0 };
+        grid[r][c] = { mine: false, revealed: false, flagged: false, adjacent: 0, revealProgress: 1, flagScale: 1 };
       }
     }
     firstClick = true;
@@ -111,6 +112,8 @@
 
     cell.revealed = true;
     revealedCount++;
+    cell.revealProgress = 0;
+    _revealQueue.push(cell);
 
     if (cell.mine) {
       gameOver = true;
@@ -120,6 +123,19 @@
       resultTitle.textContent = '游戏结束';
       resultScore.textContent = '踩到地雷了！';
       overlay.classList.remove('hidden');
+      // GSAP overlay elastic entrance
+      if (typeof gsap !== 'undefined') {
+        const content = overlay.querySelector('.overlay-content');
+        gsap.fromTo(content, { scale: 0.3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: 'elastic.out(1, 0.5)' });
+      }
+      // GSAP screen shake + flash on explosion
+      if (typeof gsap !== 'undefined') {
+        gsap.fromTo(canvas, { x: -8 }, { x: 8, duration: 0.05, yoyo: true, repeat: 7, ease: 'power2.inOut', onComplete() { gsap.set(canvas, { x: 0 }); } });
+        const flash = document.createElement('div');
+        flash.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,23,68,0.3);pointer-events:none;z-index:100;';
+        document.body.appendChild(flash);
+        gsap.to(flash, { opacity: 0, duration: 0.5, ease: 'power2.out', onComplete() { flash.remove(); } });
+      }
       spawnParticles(r, c, '#ff1744', 25);
       return;
     }
@@ -146,6 +162,10 @@
     cell.flagged = !cell.flagged;
     flagsPlaced += cell.flagged ? 1 : -1;
     minesEl.textContent = mineCount - flagsPlaced;
+    // GSAP flag toggle bounce
+    if (typeof gsap !== 'undefined') {
+      gsap.fromTo(minesEl, { scale: 1.3 }, { scale: 1, duration: 0.4, ease: 'elastic.out(1, 0.4)' });
+    }
   }
 
   function chordReveal(r, c) {
@@ -174,6 +194,11 @@
       resultTitle.textContent = '恭喜通关！';
       resultScore.textContent = '用时 ' + timer + ' 秒';
       overlay.classList.remove('hidden');
+      // GSAP overlay elastic entrance
+      if (typeof gsap !== 'undefined') {
+        const content = overlay.querySelector('.overlay-content');
+        gsap.fromTo(content, { scale: 0.3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: 'elastic.out(1, 0.5)' });
+      }
       spawnParticles(rows / 2, cols / 2, '#f5a623', 30);
     }
   }
@@ -198,6 +223,10 @@
     timerInterval = setInterval(() => {
       timer++;
       timerEl.textContent = timer + 's';
+      // GSAP timer pulse
+      if (typeof gsap !== 'undefined') {
+        gsap.fromTo(timerEl, { scale: 1.2 }, { scale: 1, duration: 0.3, ease: 'elastic.out(1, 0.5)' });
+      }
     }, 1000);
   }
 
@@ -225,6 +254,14 @@
         const x = c * cellSize, y = r * cellSize;
 
         if (cell.revealed) {
+          // GSAP reveal scale animation
+          const rp = cell.revealProgress !== undefined ? cell.revealProgress : 1;
+          if (rp < 1) {
+            ctx.save();
+            ctx.translate(x + cellSize / 2, y + cellSize / 2);
+            ctx.scale(rp, rp);
+            ctx.translate(-(x + cellSize / 2), -(y + cellSize / 2));
+          }
           // Revealed cell background
           ctx.fillStyle = cell.exploded ? 'rgba(255,23,68,0.3)' : 'rgba(20,20,40,0.4)';
           ctx.fillRect(x + 1, y + 1, cellSize - 2, cellSize - 2);
@@ -246,6 +283,7 @@
             ctx.textBaseline = 'middle';
             ctx.fillText(cell.adjacent, x + cellSize / 2, y + cellSize / 2 + 1);
           }
+          if (rp < 1) ctx.restore();
         } else {
           // Unrevealed cell - 3D raised look
           const grad = ctx.createLinearGradient(x, y, x + cellSize, y + cellSize);
@@ -329,9 +367,25 @@
     }
 
     if (grid[r][c].revealed) {
+      _revealQueue = [];
       chordReveal(r, c);
+      // GSAP stagger reveal for chord reveal
+      if (typeof gsap !== 'undefined' && _revealQueue.length > 0) {
+        _revealQueue.forEach((cell, i) => {
+          gsap.to(cell, { revealProgress: 1, duration: 0.25, delay: i * 0.03, ease: 'back.out(1.7)' });
+        });
+      }
+      _revealQueue = [];
     } else {
+      _revealQueue = [];
       reveal(r, c);
+      // GSAP stagger reveal animation
+      if (typeof gsap !== 'undefined' && _revealQueue.length > 0) {
+        _revealQueue.forEach((cell, i) => {
+          gsap.to(cell, { revealProgress: 1, duration: 0.25, delay: i * 0.03, ease: 'back.out(1.7)' });
+        });
+      }
+      _revealQueue = [];
     }
     updateUI();
   }

@@ -70,6 +70,13 @@
       spawnParticles(bird.x, bird.y, '#ff1744', 15);
       resultTitle.textContent = '撞到啦'; resultScore.textContent = '得分: ' + score;
       overlay.classList.remove('hidden');
+      // GSAP: elastic scale entrance on game over overlay
+      if (typeof gsap !== 'undefined') {
+        gsap.fromTo(overlay.querySelector('.overlay-content'),
+          { scale: 0.3, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.6, ease: 'elastic.out(1, 0.5)' }
+        );
+      }
       return;
     }
     // Ceiling
@@ -87,6 +94,11 @@
         score++;
         updateScore();
         spawnParticles(bird.x, bird.y - 20, '#f5a623', 5);
+        // GSAP: small screen flash on pipe pass
+        if (typeof gsap !== 'undefined') {
+          gsap.fromTo(canvas, { filter: 'brightness(1.4)' },
+            { filter: 'brightness(1)', duration: 0.2, ease: 'power2.out' });
+        }
       }
 
       // Collision
@@ -96,6 +108,13 @@
           spawnParticles(bird.x, bird.y, '#ff1744', 15);
           resultTitle.textContent = '撞到啦'; resultScore.textContent = '得分: ' + score;
           overlay.classList.remove('hidden');
+          // GSAP: elastic scale entrance on game over overlay
+          if (typeof gsap !== 'undefined') {
+            gsap.fromTo(overlay.querySelector('.overlay-content'),
+              { scale: 0.3, opacity: 0 },
+              { scale: 1, opacity: 1, duration: 0.6, ease: 'elastic.out(1, 0.5)' }
+            );
+          }
           return;
         }
       }
@@ -125,6 +144,10 @@
     if (!started) { started = true; }
     bird.vy = FLAP;
     spawnParticles(bird.x - 8, bird.y, '#76ff03', 4);
+    // GSAP: brief canvas scale pulse on bird flap
+    if (typeof gsap !== 'undefined') {
+      gsap.fromTo(canvas, { scale: 1.03 }, { scale: 1, duration: 0.2, ease: 'back.out(2)' });
+    }
   }
 
   function render() {
@@ -277,7 +300,12 @@
     ctx.closePath();
   }
 
-  function updateScore() { scoreEl.textContent = score; saveBest(); }
+  function updateScore() { scoreEl.textContent = score; saveBest();
+    // GSAP: elastic scale bounce on score
+    if (typeof gsap !== 'undefined') {
+      gsap.fromTo(scoreEl, { scale: 1.5 }, { scale: 1, duration: 0.5, ease: 'elastic.out(1, 0.4)' });
+    }
+  }
 
   function loop() { update(); render(); animFrame = requestAnimationFrame(loop); }
 
