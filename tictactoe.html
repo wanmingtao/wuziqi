@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>井字棋</title>
+  <link rel="stylesheet" href="css/tictactoe.css">
+</head>
+<body>
+<canvas id="bgCanvas"></canvas>
+<div class="app">
+  <div class="hud">
+    <div class="hud-item player-x">
+      <span class="hud-label">✕ 玩家X</span>
+      <span class="hud-value" id="xWins">0</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">回合</span>
+      <span class="hud-value" id="turnDisplay">✕</span>
+    </div>
+    <div class="hud-item player-o">
+      <span class="hud-label">○ 玩家O</span>
+      <span class="hud-value" id="oWins">0</span>
+    </div>
+  </div>
+  <div class="game-container">
+    <canvas id="gameCanvas"></canvas>
+    <div class="overlay hidden" id="overlay">
+      <div class="overlay-content">
+        <h2 id="resultTitle">游戏结束</h2>
+        <p id="resultText"></p>
+        <button class="btn btn-primary" id="restartBtn">再来一局</button>
+      </div>
+    </div>
+  </div>
+  <div class="control-bar">
+    <select id="modeSelect" class="btn btn-secondary">
+      <option value="ai">人机对战</option>
+      <option value="pvp">双人对战</option>
+    </select>
+    <button class="btn btn-primary" id="newGameBtn">新游戏</button>
+  </div>
+  <p class="hint">点击格子放置 ✕ 或 ○</p>
+</div>
+<script src="js/tictactoe.js"></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif; background: #0a0a1a; color: #e0e0f0; }
+#bgCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+.app { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 16px; gap: 12px; }
+.hud { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
+.hud-item { text-align: center; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 8px 20px; backdrop-filter: blur(6px); }
+.hud-label { display: block; font-size: 13px; opacity: 0.7; }
+.hud-value { font-size: 28px; font-weight: 700; background: linear-gradient(135deg, #f0c060, #e08040); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.player-black .hud-value { background: linear-gradient(135deg, #aaa, #fff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.player-white .hud-value { background: linear-gradient(135deg, #f0e0c0, #fff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.game-container { position: relative; }
+#gameCanvas { border-radius: 12px; box-shadow: 0 0 30px rgba(0,150,80,0.3); cursor: pointer; max-width: 90vw; max-height: 70vh; }
+.overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; border-radius: 12px; backdrop-filter: blur(4px); }
+.overlay.hidden { display: none; }
+.overlay-content { text-align: center; padding: 30px; }
+.overlay-content h2 { font-size: 28px; margin-bottom: 10px; }
+.overlay-content p { font-size: 16px; margin-bottom: 20px; opacity: 0.8; }
+.control-bar { display: flex; gap: 12px; justify-content: center; }
+.btn { border: none; border-radius: 8px; padding: 10px 24px; font-size: 15px; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+.btn-primary { background: linear-gradient(135deg, #00c060, #0090a0); color: #fff; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,180,100,0.4); }
+.btn-secondary { background: rgba(255,255,255,0.1); color: #e0e0f0; border: 1px solid rgba(255,255,255,0.2); }
+.btn-secondary:hover { background: rgba(255,255,255,0.2); }
+select.btn { appearance: none; -webkit-appearance: none; padding-right: 30px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23e0e0f0'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+select.btn option { background: #1a1a2e; color: #e0e0f0; }
+.hint { font-size: 13px; opacity: 0.5; text-align: center; }
