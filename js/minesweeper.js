@@ -160,7 +160,7 @@
     const cell = getCell(r, c);
     if (!cell || cell.revealed || gameOver) return;
     cell.flagged = !cell.flagged;
-    flagsPlaced += cell.flagged ? 1 : -1;
+    flagsPlaced = Math.max(0, flagsPlaced + (cell.flagged ? 1 : -1));
     minesEl.textContent = mineCount - flagsPlaced;
     // GSAP flag toggle bounce
     if (typeof gsap !== 'undefined') {

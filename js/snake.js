@@ -52,7 +52,7 @@
     for (let x = 0; x < COLS; x++)
       for (let y = 0; y < ROWS; y++)
         if (!occupied.has(x + ',' + y)) empty.push({ x, y });
-    if (empty.length === 0) return;
+    if (empty.length === 0) { food = null; return; }
     food = empty[Math.floor(Math.random() * empty.length)];
     food.type = Math.random() < 0.15 ? 'bonus' : 'normal';
   }
@@ -84,7 +84,7 @@
     snake.unshift(head);
 
     // Food
-    if (head.x === food.x && head.y === food.y) {
+    if (food && head.x === food.x && head.y === food.y) {
       score += food.type === 'bonus' ? 3 : 1;
       updateUI();
       saveBest();
@@ -154,30 +154,32 @@
     }
 
     // Food
-    ctx.shadowColor = food.type === 'bonus' ? '#d500f9' : '#ff1744';
-    ctx.shadowBlur = 14;
+    if (food) {
+      ctx.shadowColor = food.type === 'bonus' ? '#d500f9' : '#ff1744';
+      ctx.shadowBlur = 14;
 
-    // Food glow ring
-    ctx.fillStyle = food.type === 'bonus' ? 'rgba(213,0,249,0.2)' : 'rgba(255,23,68,0.2)';
-    ctx.beginPath();
-    ctx.arc(food.x * CELL + CELL / 2, food.y * CELL + CELL / 2, CELL * 0.7, 0, Math.PI * 2);
-    ctx.fill();
+      // Food glow ring
+      ctx.fillStyle = food.type === 'bonus' ? 'rgba(213,0,249,0.2)' : 'rgba(255,23,68,0.2)';
+      ctx.beginPath();
+      ctx.arc(food.x * CELL + CELL / 2, food.y * CELL + CELL / 2, CELL * 0.7, 0, Math.PI * 2);
+      ctx.fill();
 
-    // Food body
-    const fGrad = ctx.createRadialGradient(food.x * CELL + 5, food.y * CELL + 5, 2, food.x * CELL + CELL / 2, food.y * CELL + CELL / 2, CELL * 0.5);
-    if (food.type === 'bonus') {
-      fGrad.addColorStop(0, '#ea80fc');
-      fGrad.addColorStop(1, '#d500f9');
-    } else {
-      fGrad.addColorStop(0, '#ff5252');
-      fGrad.addColorStop(1, '#ff1744');
+      // Food body
+      const fGrad = ctx.createRadialGradient(food.x * CELL + 5, food.y * CELL + 5, 2, food.x * CELL + CELL / 2, food.y * CELL + CELL / 2, CELL * 0.5);
+      if (food.type === 'bonus') {
+        fGrad.addColorStop(0, '#ea80fc');
+        fGrad.addColorStop(1, '#d500f9');
+      } else {
+        fGrad.addColorStop(0, '#ff5252');
+        fGrad.addColorStop(1, '#ff1744');
+      }
+      ctx.fillStyle = fGrad;
+      ctx.beginPath();
+      ctx.arc(food.x * CELL + CELL / 2, food.y * CELL + CELL / 2, CELL * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
     }
-    ctx.fillStyle = fGrad;
-    ctx.beginPath();
-    ctx.arc(food.x * CELL + CELL / 2, food.y * CELL + CELL / 2, CELL * 0.4, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.shadowBlur = 0;
 
     // Snake
     for (let i = 0; i < snake.length; i++) {

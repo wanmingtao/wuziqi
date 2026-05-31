@@ -83,7 +83,7 @@
     if (ball.stuck) {
       ball.x = paddle.x + paddle.w / 2;
       ball.y = paddle.y - BALL_R;
-      if (keys[' '] || mouseX < -1) { ball.stuck = false; mouseX = -1; }
+      if (keys[' '] || mouseX >= 0) { ball.stuck = false; mouseX = -1; }
       return;
     }
 

@@ -233,7 +233,10 @@
     const container = document.querySelector('.game-container');
     for (let i = 0; i < 30; i++) {
       const p = document.createElement('div');
+      const tx = (Math.random() - 0.5) * 120;
+      const ty = (Math.random() - 0.5) * 120;
       p.style.cssText = `
+        --tx:${tx}px;--ty:${ty}px;
         position:absolute;z-index:20;pointer-events:none;
         left:${40 + Math.random() * 60}%;top:${40 + Math.random() * 40}%;
         width:${4 + Math.random() * 6}px;height:${4 + Math.random() * 6}px;
@@ -293,12 +296,12 @@
   resetGame();
   bindInput();
 
-  // Inject confetti keyframe
+  // Inject confetti keyframe (dynamic per particle)
   const style = document.createElement('style');
   style.textContent = `
     @keyframes confetti {
       0% { transform: translate(0,0) scale(1); opacity: 1; }
-      100% { transform: translate(${Math.random() * 120 - 60}px, ${Math.random() * 120 - 60}px) scale(0); opacity: 0; }
+      100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
     }
   `;
   document.head.appendChild(style);

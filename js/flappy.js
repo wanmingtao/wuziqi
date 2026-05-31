@@ -35,7 +35,7 @@
   function saveBest() { if (score > bestScore) { bestScore = score; localStorage.setItem('bestFlappy', bestScore); bestEl.textContent = bestScore; } }
 
   function resetGame() {
-    score = 0; gameOver = false; started = false;
+    score = 0; gameOver = false; started = false; groundX = 0;
     overlay.classList.add('hidden');
     bird = { x: W * 0.3, y: H / 2, vy: 0, r: BIRD_R, rot: 0 };
     pipes = [];

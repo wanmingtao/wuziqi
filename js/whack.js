@@ -281,6 +281,10 @@
     if (spawnInterval) clearInterval(spawnInterval);
     timer = null;
     spawnInterval = null;
+    // Clear old mole timers
+    if (moles) {
+      moles.forEach(m => { if (m.timer) clearTimeout(m.timer); });
+    }
     init();
 
     // GSAP: animate overlay out

@@ -24,14 +24,14 @@
   const PUSH_INTERVAL = 8;
   const SPEED = 8;
 
-  let grid, currentBubble, nextColor, aimAngle;
+  let grid, currentBubble, nextColor, aimAngle = 0;
   let score = 0, bestScore = 0, combo = 0, shotsFired = 0;
   let gameOver = false, shooting = false, particles = [];
   let mouseX = 0, mouseY = 0, isAiming = false;
 
   // GSAP animation state
-  const gsapBubbleScale = {};
-  const gsapBubbleAlpha = {};
+  let gsapBubbleScale = {};
+  let gsapBubbleAlpha = {};
 
   function loadBest() {
     bestScore = parseInt(localStorage.getItem('bestBubblePop') || '0');
@@ -573,6 +573,8 @@
     shooting = false;
     currentBubble = null;
     particles = [];
+    gsapBubbleScale = {};
+    gsapBubbleAlpha = {};
     isAiming = false;
     aimAngle = 0;
     nextColor = Math.floor(Math.random() * COLORS.length);
