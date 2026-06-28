@@ -36,40 +36,30 @@ const Tetris = (() => {
   let gameOver, paused;
   let dropInterval, dropTimer, lastTime, animFrameId;
   let clearingRows, clearAnimTimer;
-  let particles, shakeTimer;
+  let particles;
   let touchRepeatTimer, touchRepeatInterval;
   let bag;
+  let canvasScaleX, canvasScaleY;
 
   // ========== DOM Refs ==========
   let boardCanvas, boardCtx;
   let nextCanvas, nextCtx;
   let holdCanvas, holdCtx;
   let scoreDisplay, levelDisplay, linesDisplay, bestDisplay;
-  let gameOverlay, overlayScore, overlayRetry;
+  let gameOverlay, overlayScore, overlayLevel, overlayLines, overlayRetry;
   let pauseBtn, newGameBtn;
-  let boardWrapper;
+  let boardArea, comboContainer;
   let bgCanvas, bgCtx, bgParticles;
 
   // ========== Init ==========
   function init() {
     cacheDOM();
-    sizePreviews();
-    calcBlockSize();
-    initBgParticles();
     bindInput();
     loadBest();
+    calcBlockSize();
+    initBgParticles();
     resetGame();
     gameLoop(0);
-  }
-
-  function sizePreviews() {
-    const holdW = Math.min(80, holdCanvas.parentElement.clientWidth - 12);
-    holdCanvas.width = holdW;
-    holdCanvas.height = Math.floor(holdW * 0.88);
-
-    const nextW = Math.min(80, nextCanvas.parentElement.clientWidth - 12);
-    nextCanvas.width = nextW;
-    nextCanvas.height = Math.floor(nextW * 1.25);
   }
 
   function cacheDOM() {
@@ -85,25 +75,27 @@ const Tetris = (() => {
     bestDisplay = document.getElementById('bestDisplay');
     gameOverlay = document.getElementById('gameOverlay');
     overlayScore = document.getElementById('overlayScore');
+    overlayLevel = document.getElementById('overlayLevel');
+    overlayLines = document.getElementById('overlayLines');
     overlayRetry = document.getElementById('overlayRetry');
     pauseBtn = document.getElementById('pauseBtn');
     newGameBtn = document.getElementById('newGameBtn');
-    boardWrapper = document.getElementById('boardWrapper');
+    boardArea = document.getElementById('boardArea');
+    comboContainer = document.getElementById('comboContainer');
     bgCanvas = document.getElementById('bgCanvas');
     bgCtx = bgCanvas.getContext('2d');
   }
 
   function calcBlockSize() {
-    const wrapperWidth = boardWrapper.clientWidth - 4; // account for border
-    blockSize = Math.floor(wrapperWidth / COLS);
-    blockSize = Math.max(18, Math.min(40, blockSize));
+    const rect = boardArea.getBoundingClientRect();
+    const w = rect.width - 4;
+    const h = rect.height - 4;
+    blockSize = Math.min(Math.floor(w / COLS), Math.floor(h / ROWS));
+    blockSize = Math.max(14, Math.min(50, blockSize));
     boardCanvas.width = COLS * blockSize;
     boardCanvas.height = ROWS * blockSize;
-  }
-
-  function previewBlockSize(canvas) {
-    const w = canvas.clientWidth || canvas.width;
-    return Math.max(10, Math.floor((w - 8) / 5));
+    canvasScaleX = w / boardCanvas.width;
+    canvasScaleY = h / boardCanvas.height;
   }
 
   function loadBest() {
@@ -137,16 +129,15 @@ const Tetris = (() => {
     clearingRows = null;
     clearAnimTimer = 0;
     particles = [];
-    shakeTimer = 0;
     dropInterval = 800;
+    comboContainer.innerHTML = '';
 
     gameOverlay.classList.remove('show');
-    boardWrapper.classList.remove('shake', 'combo-glow');
-    pauseBtn.textContent = '暂停';
+    boardArea.classList.remove('shake');
+    pauseBtn.textContent = '⏸';
     updateScore();
     updateLevel();
 
-    // Fill next queue
     for (let i = 0; i < 2; i++) nextTypes.push(pullFromBag());
     spawnPiece();
     while (nextTypes.length < 2) nextTypes.push(pullFromBag());
@@ -173,7 +164,6 @@ const Tetris = (() => {
     nextTypes.push(pullFromBag());
     currentShape = SHAPES[currentType].map(r => [...r]);
     currentRot = 0;
-    // Center horizontally, spawn above visible area
     currentX = Math.floor((COLS - currentShape[0].length) / 2);
     currentY = currentType === 'I' ? -1 : -2;
 
@@ -181,18 +171,20 @@ const Tetris = (() => {
       gameOver = true;
       stopRepeat();
       saveBest();
-      overlayScore.textContent = '得分: ' + score + '  等级: ' + level;
+      overlayScore.textContent = score;
+      overlayLevel.textContent = level;
+      overlayLines.textContent = lines;
       gameOverlay.classList.add('show');
-      // GSAP: elastic entrance on game over overlay
       if (typeof gsap !== 'undefined') {
-        gsap.fromTo(gameOverlay, { scale: 0.3, opacity: 0 },
-          { scale: 1, opacity: 1, duration: 0.6, ease: 'elastic.out(1, 0.5)' });
+        gsap.fromTo(gameOverlay.querySelector('.overlay-content'),
+          { scale: 0.3, opacity: 0, y: 20 },
+          { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: 'back.out(1.4)' });
       }
       if (animFrameId) cancelAnimationFrame(animFrameId);
     }
     canHold = true;
-    renderNext();
-    renderHold();
+    renderPreview(nextCtx, nextCanvas, nextTypes);
+    renderPreview(holdCtx, holdCanvas, holdType ? [holdType] : []);
   }
 
   function holdCurrentPiece() {
@@ -221,7 +213,7 @@ const Tetris = (() => {
       currentX = Math.floor((COLS - currentShape[0].length) / 2);
       currentY = currentType === 'I' ? -1 : -2;
     }
-    renderHold();
+    renderPreview(holdCtx, holdCanvas, holdType ? [holdType] : []);
   }
 
   // ========== Rotation ==========
@@ -328,39 +320,38 @@ const Tetris = (() => {
   // ========== Lock & Clear ==========
   function lockPiece() {
     let blocked = false;
-    outer:
     for (let r = 0; r < currentShape.length; r++) {
       for (let c = 0; c < currentShape[r].length; c++) {
         if (!currentShape[r][c]) continue;
         const by = currentY + r;
-        if (by < 0) { blocked = true; break outer; }
+        if (by < 0) { blocked = true; break; }
         board[by][currentX + c] = currentType;
       }
+      if (blocked) break;
     }
     if (blocked) {
       gameOver = true;
       stopRepeat();
       saveBest();
-      overlayScore.textContent = '得分: ' + score + '  等级: ' + level;
+      overlayScore.textContent = score;
+      overlayLevel.textContent = level;
+      overlayLines.textContent = lines;
       gameOverlay.classList.add('show');
-      // GSAP: elastic entrance on game over overlay
       if (typeof gsap !== 'undefined') {
-        gsap.fromTo(gameOverlay, { scale: 0.3, opacity: 0 },
-          { scale: 1, opacity: 1, duration: 0.6, ease: 'elastic.out(1, 0.5)' });
+        gsap.fromTo(gameOverlay.querySelector('.overlay-content'),
+          { scale: 0.3, opacity: 0, y: 20 },
+          { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: 'back.out(1.4)' });
       }
       if (animFrameId) cancelAnimationFrame(animFrameId);
       return;
     }
-
-    // Check for line clears
     const fullRows = [];
     for (let r = 0; r < ROWS; r++) {
       if (board[r].every(cell => cell !== null)) fullRows.push(r);
     }
-
     if (fullRows.length > 0) {
       clearingRows = fullRows;
-      clearAnimTimer = 250; // flash animation duration
+      clearAnimTimer = 250;
     } else {
       combo = -1;
       spawnPiece();
@@ -370,54 +361,30 @@ const Tetris = (() => {
 
   function finishClearLines() {
     if (!clearingRows || clearingRows.length === 0) return;
-
     const count = clearingRows.length;
     combo++;
-
-    // Scoring
     const basePoints = [0, 100, 300, 500, 800];
     const points = (basePoints[count] || count * 200) * level;
     const comboBonus = combo > 0 ? 50 * combo * level : 0;
     score += points + comboBonus;
     updateScore();
     saveBest();
-
-    // Level
     lines += count;
     const newLevel = Math.floor(lines / 10) + 1;
     if (newLevel > level) {
       level = newLevel;
       dropInterval = Math.max(40, 800 - (level - 1) * 60);
       updateLevel();
-      // GSAP: level up border glow + score pulse
-      if (typeof gsap !== 'undefined') {
-        gsap.fromTo(boardWrapper, { boxShadow: '0 0 30px rgba(118,255,3,0.8), 0 0 60px rgba(118,255,3,0.4)' },
-          { boxShadow: '0 0 0px rgba(118,255,3,0)', duration: 1.2, ease: 'power2.out' });
-        gsap.fromTo(scoreDisplay, { scale: 1.6 }, { scale: 1, duration: 0.8, ease: 'elastic.out(1, 0.3)' });
-      }
     }
-
-    // Effects
     if (count === 4) {
-      boardWrapper.classList.add('shake');
-      shakeTimer = 500;
-    }
-    // GSAP: line clear screen flash + shake
-    if (typeof gsap !== 'undefined') {
-      gsap.fromTo(boardWrapper, { x: -6 }, { x: 0, duration: 0.4, ease: 'elastic.out(1, 0.3)' });
-      if (count >= 2) {
-        gsap.fromTo(boardWrapper, { filter: 'brightness(1.8)' },
-          { filter: 'brightness(1)', duration: 0.3, ease: 'power2.out' });
-      }
+      boardArea.classList.add('shake');
+      setTimeout(() => boardArea.classList.remove('shake'), 450);
     }
     if (combo > 1) {
       showComboToast(count, combo);
-      boardWrapper.classList.add('combo-glow');
-      setTimeout(() => boardWrapper.classList.remove('combo-glow'), 600);
     }
     spawnClearParticles(clearingRows);
 
-    // Remove rows
     clearingRows.sort((a, b) => b - a);
     for (const r of clearingRows) {
       board.splice(r, 1);
@@ -435,10 +402,6 @@ const Tetris = (() => {
     scoreDisplay.classList.remove('pop');
     void scoreDisplay.offsetWidth;
     scoreDisplay.classList.add('pop');
-    // GSAP: elastic scale bounce on score
-    if (typeof gsap !== 'undefined') {
-      gsap.fromTo(scoreDisplay, { scale: 1.5 }, { scale: 1, duration: 0.5, ease: 'elastic.out(1, 0.4)' });
-    }
   }
 
   function updateLevel() {
@@ -456,7 +419,7 @@ const Tetris = (() => {
     el.className = 'combo-toast';
     el.textContent = texts[count] || '';
     if (comboCount > 1) el.textContent += ' x' + comboCount;
-    boardWrapper.appendChild(el);
+    boardArea.appendChild(el);
     el.addEventListener('animationend', () => el.remove());
   }
 
@@ -510,15 +473,9 @@ const Tetris = (() => {
       render();
       return;
     }
-
     if (!lastTime) lastTime = timestamp;
     const delta = timestamp - lastTime;
     lastTime = timestamp;
-
-    if (shakeTimer > 0) {
-      shakeTimer -= delta;
-      if (shakeTimer <= 0) boardWrapper.classList.remove('shake');
-    }
 
     if (!paused && !clearingRows) {
       dropTimer += delta;
@@ -529,14 +486,12 @@ const Tetris = (() => {
         }
       }
     }
-
     if (clearingRows) {
       clearAnimTimer -= delta;
       if (clearAnimTimer <= 0) {
         finishClearLines();
       }
     }
-
     updateParticles();
     render();
     animFrameId = requestAnimationFrame(gameLoop);
@@ -546,12 +501,11 @@ const Tetris = (() => {
   function render() {
     const w = boardCanvas.width, h = boardCanvas.height;
 
-    // Clear board
-    boardCtx.fillStyle = 'rgba(0,0,0,0.4)';
+    boardCtx.fillStyle = 'rgba(0,0,0,0.3)';
     boardCtx.fillRect(0, 0, w, h);
 
-    // Grid lines
-    boardCtx.strokeStyle = 'rgba(255,255,255,0.03)';
+    // Grid
+    boardCtx.strokeStyle = 'rgba(255,255,255,0.025)';
     boardCtx.lineWidth = 0.5;
     for (let r = 0; r <= ROWS; r++) {
       boardCtx.beginPath();
@@ -570,7 +524,7 @@ const Tetris = (() => {
     for (let r = 0; r < ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
         if (board[r][c]) {
-          drawBlock(boardCtx, c, r, COLORS[board[r][c]], GLOW_COLORS[board[r][c]], 1);
+          drawBlock(boardCtx, c, r, COLORS[board[r][c]], GLOW_COLORS[board[r][c]]);
         }
       }
     }
@@ -598,9 +552,9 @@ const Tetris = (() => {
             if (!currentShape[r][c]) continue;
             const px = currentX + c, py = gy + r;
             if (py < 0) continue;
-            boardCtx.strokeStyle = 'rgba(255,255,255,0.25)';
-            boardCtx.lineWidth = 1.5;
-            boardCtx.setLineDash([3, 3]);
+            boardCtx.strokeStyle = 'rgba(255,255,255,0.2)';
+            boardCtx.lineWidth = 1.2;
+            boardCtx.setLineDash([2, 2]);
             boardCtx.strokeRect(px * blockSize + 2, py * blockSize + 2, blockSize - 4, blockSize - 4);
             boardCtx.setLineDash([]);
           }
@@ -615,17 +569,14 @@ const Tetris = (() => {
           if (!currentShape[r][c]) continue;
           const px = currentX + c, py = currentY + r;
           if (py < 0) continue;
-          drawBlock(boardCtx, px, py, COLORS[currentType], GLOW_COLORS[currentType], 1);
+          drawBlock(boardCtx, px, py, COLORS[currentType], GLOW_COLORS[currentType]);
         }
       }
     }
 
-    // Particles
     renderParticles(boardCtx);
-
-    // Render next queue
-    renderNext();
-    renderHold();
+    renderPreview(nextCtx, nextCanvas, nextTypes);
+    renderPreview(holdCtx, holdCanvas, holdType ? [holdType] : []);
   }
 
   function roundRect(ctx, x, y, w, h, r) {
@@ -642,45 +593,33 @@ const Tetris = (() => {
     ctx.closePath();
   }
 
-  function drawBlock(ctx, col, row, color, glow, alpha) {
+  function drawBlock(ctx, col, row, color, glow) {
     const x = col * blockSize, y = row * blockSize;
     const s = blockSize;
-
-    ctx.globalAlpha = alpha;
     ctx.shadowColor = glow;
     ctx.shadowBlur = 4;
-
-    // Main fill
     const grad = ctx.createLinearGradient(x, y, x + s, y + s);
     grad.addColorStop(0, color);
     grad.addColorStop(1, 'rgba(0,0,0,0.15)');
     ctx.fillStyle = grad;
-    roundRect(ctx, x + 1, y + 1, s - 2, s - 2, 3);
+    roundRect(ctx, x + 1, y + 1, s - 2, s - 2, 2);
     ctx.fill();
-
-    // Remove shadow for highlight
     ctx.shadowBlur = 0;
-
-    // Inner highlight
     ctx.fillStyle = 'rgba(255,255,255,0.2)';
-    roundRect(ctx, x + 3, y + 3, s - 6, s / 2 - 2, 2);
+    roundRect(ctx, x + 3, y + 3, s - 6, s / 2 - 2, 1.5);
     ctx.fill();
-
-    // Border
-    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-    ctx.lineWidth = 0.8;
-    roundRect(ctx, x + 1.5, y + 1.5, s - 3, s - 3, 3);
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.lineWidth = 0.6;
+    roundRect(ctx, x + 1.5, y + 1.5, s - 3, s - 3, 2);
     ctx.stroke();
-
-    ctx.globalAlpha = 1;
   }
 
-  function renderPreview(ctx, canvas, typeList, blockSz) {
+  function renderPreview(ctx, canvas, typeList) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (!typeList || (Array.isArray(typeList) && typeList.length === 0)) return;
+    if (!typeList || typeList.length === 0) return;
+    const blockSz = Math.max(6, Math.floor((canvas.width - 8) / 5));
     const types = Array.isArray(typeList) ? typeList : [typeList];
-
-    let yOff = 4;
+    let yOff = 3;
     for (const type of types.slice(0, 2)) {
       const shape = SHAPES[type];
       const color = COLORS[type];
@@ -690,28 +629,23 @@ const Tetris = (() => {
         for (let c = 0; c < shape[r].length; c++) {
           if (!shape[r][c]) continue;
           const x = ox + c * blockSz, y = yOff + r * blockSz;
+          ctx.shadowColor = 'rgba(255,255,255,0.1)';
+          ctx.shadowBlur = 2;
           const grad = ctx.createLinearGradient(x, y, x + blockSz, y + blockSz);
           grad.addColorStop(0, color);
           grad.addColorStop(1, 'rgba(0,0,0,0.15)');
           ctx.fillStyle = grad;
-          roundRect(ctx, x + 1, y + 1, blockSz - 2, blockSz - 2, 2);
+          roundRect(ctx, x + 1, y + 1, blockSz - 2, blockSz - 2, 1.5);
           ctx.fill();
-
-          ctx.fillStyle = 'rgba(255,255,255,0.2)';
-          roundRect(ctx, x + 2, y + 2, blockSz - 4, blockSz / 2 - 2, 1.5);
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = 'rgba(255,255,255,0.15)';
+          roundRect(ctx, x + 2, y + 2, blockSz - 4, blockSz / 2 - 2, 1);
           ctx.fill();
         }
       }
-      yOff += shape.length * blockSz + 8;
+      yOff += shape.length * blockSz + 6;
     }
-  }
-
-  function renderNext() {
-    renderPreview(nextCtx, nextCanvas, nextTypes, previewBlockSize(nextCanvas));
-  }
-
-  function renderHold() {
-    renderPreview(holdCtx, holdCanvas, holdType ? [holdType] : [], previewBlockSize(holdCanvas));
+    ctx.shadowBlur = 0;
   }
 
   // ========== Background Particles ==========
@@ -722,7 +656,6 @@ const Tetris = (() => {
     }
     window.addEventListener('resize', resize);
     resize();
-
     class Particle {
       constructor() { this.reset(); }
       reset() {
@@ -750,7 +683,6 @@ const Tetris = (() => {
       }
     }
     bgParticles = Array.from({ length: 30 }, () => new Particle());
-
     function animate() {
       bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
       for (const p of bgParticles) { p.update(); p.draw(bgCtx); }
@@ -759,7 +691,7 @@ const Tetris = (() => {
     animate();
   }
 
-  // ========== Input ==========
+  // ========== Touch Repeat Helpers ==========
   function startRepeat(action) {
     if (gameOver || paused || clearingRows) return;
     action();
@@ -772,19 +704,19 @@ const Tetris = (() => {
       }, 50);
     }, 150);
   }
+
   function stopRepeat() {
     if (touchRepeatTimer) { clearTimeout(touchRepeatTimer); touchRepeatTimer = null; }
     if (touchRepeatInterval) { clearInterval(touchRepeatInterval); touchRepeatInterval = null; }
   }
 
+  // ========== Input ==========
   function bindInput() {
+    // Keyboard
     document.addEventListener('keydown', e => {
       if (gameOver) return;
-
-      if (e.key === 'p' || e.key === 'P') { togglePause(); return; }
-
+      if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') { togglePause(); return; }
       if (paused) return;
-
       switch (e.key) {
         case 'ArrowLeft':  e.preventDefault(); movePiece(-1, 0); break;
         case 'ArrowRight': e.preventDefault(); movePiece(1, 0); break;
@@ -795,7 +727,7 @@ const Tetris = (() => {
       }
     });
 
-    // Touch
+    // Board swipe gestures
     let tsX = 0, tsY = 0, tsTime = 0;
     boardCanvas.addEventListener('touchstart', e => {
       tsX = e.touches[0].clientX;
@@ -810,40 +742,40 @@ const Tetris = (() => {
       const dt = Date.now() - tsTime;
       const ax = Math.abs(dx), ay = Math.abs(dy);
 
-      const tap = Math.max(blockSize * 0.5, 10);
-      const moveThresh = Math.max(blockSize * 1.5, 30);
-      const fastThresh = Math.max(blockSize * 3, 60);
+      const tap = Math.max(blockSize * 0.4, 8);
+      const moveThresh = Math.max(blockSize * 1.2, 24);
+      const fastThresh = Math.max(blockSize * 2.5, 50);
 
       if (ax < tap && ay < tap && dt < 300) {
-        // Tap = rotate
         rotatePiece();
       } else if (ay > ax && dy > fastThresh && dt < 200) {
-        // Fast swipe down = hard drop
         hardDrop();
       } else if (ay > ax && dy > moveThresh) {
-        // Soft drop
         softDrop();
       } else if (ax > ay && ax > moveThresh) {
         movePiece(dx > 0 ? 1 : -1, 0);
       }
     }, { passive: true });
 
+    // Buttons
     newGameBtn.addEventListener('click', () => {
       if (animFrameId) cancelAnimationFrame(animFrameId);
       resetGame();
       lastTime = 0;
       gameLoop(0);
     });
+
     overlayRetry.addEventListener('click', () => {
       gameOverlay.classList.remove('show');
       resetGame();
       lastTime = 0;
       gameLoop(0);
     });
+
     pauseBtn.addEventListener('click', togglePause);
 
-    // Touch control buttons — with repeat-on-hold for directional buttons
-    function bindTouchBtn(id, action, repeatable) {
+    // Touch bar buttons
+    function bindTbtn(id, action, repeatable) {
       const el = document.getElementById(id);
       if (!el) return;
       el.addEventListener('touchstart', e => {
@@ -855,28 +787,25 @@ const Tetris = (() => {
         e.preventDefault();
         if (repeatable) stopRepeat();
       }, { passive: false });
-      el.addEventListener('touchcancel', () => {
-        if (repeatable) stopRepeat();
-      }, { passive: false });
+      el.addEventListener('touchcancel', () => { if (repeatable) stopRepeat(); }, { passive: false });
       el.addEventListener('mousedown', e => {
         e.preventDefault();
         if (gameOver || paused || clearingRows) return;
         action();
       });
     }
-    bindTouchBtn('touchLeft', () => movePiece(-1, 0), true);
-    bindTouchBtn('touchRight', () => movePiece(1, 0), true);
-    bindTouchBtn('touchDown', () => softDrop(), true);
-    bindTouchBtn('touchRotate', () => rotatePiece(), false);
-    bindTouchBtn('touchDrop', () => hardDrop(), false);
-    bindTouchBtn('touchHold', () => holdCurrentPiece(), false);
+    bindTbtn('tLeft', () => movePiece(-1, 0), true);
+    bindTbtn('tRight', () => movePiece(1, 0), true);
+    bindTbtn('tDown', () => softDrop(), true);
+    bindTbtn('tRotate', () => rotatePiece(), false);
+    bindTbtn('tDrop', () => hardDrop(), false);
+    bindTbtn('tHold', () => holdCurrentPiece(), false);
 
     // Resize
     let resizeTimer;
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
-        sizePreviews();
         calcBlockSize();
         render();
       }, 150);
@@ -886,7 +815,7 @@ const Tetris = (() => {
   function togglePause() {
     if (gameOver) return;
     paused = !paused;
-    pauseBtn.textContent = paused ? '继续' : '暂停';
+    pauseBtn.textContent = paused ? '▶' : '⏸';
     if (!paused) lastTime = 0;
     if (paused) stopRepeat();
   }

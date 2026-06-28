@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>俄罗斯方块</title>
   <link rel="stylesheet" href="css/tetris.css">
 </head>
@@ -10,83 +10,98 @@
 
 <canvas id="bgCanvas"></canvas>
 
-<div class="tetris-app">
+<div class="app" id="app">
 
-  <div class="info-bar">
-    <div class="info-item">
-      <span class="info-label">分数</span>
-      <span class="info-value" id="scoreDisplay">0</span>
+  <!-- ====== 顶部信息栏 ====== -->
+  <div class="top-bar">
+    <div class="stat">
+      <span class="stat-label">分数</span>
+      <span class="stat-value" id="scoreDisplay">0</span>
     </div>
-    <div class="info-item">
-      <span class="info-label">等级</span>
-      <span class="info-value" id="levelDisplay">1</span>
+    <div class="stat">
+      <span class="stat-label">等级</span>
+      <span class="stat-value" id="levelDisplay">1</span>
     </div>
-    <div class="info-item">
-      <span class="info-label">行数</span>
-      <span class="info-value" id="linesDisplay">0</span>
+    <div class="stat">
+      <span class="stat-label">行数</span>
+      <span class="stat-value" id="linesDisplay">0</span>
     </div>
-    <div class="info-item">
-      <span class="info-label">最高</span>
-      <span class="info-value" id="bestDisplay">0</span>
+    <div class="stat">
+      <span class="stat-label">最高</span>
+      <span class="stat-value" id="bestDisplay">0</span>
     </div>
   </div>
 
-  <div class="game-row">
-    <div class="side-panel" id="holdPanel">
-      <div class="panel-label">保持</div>
-      <canvas class="preview-canvas" id="holdCanvas" width="80" height="70"></canvas>
+  <!-- ====== 棋盘区域 ====== -->
+  <div class="board-area" id="boardArea">
+    <canvas id="boardCanvas"></canvas>
+
+    <!-- Hold 悬浮层（左上角） -->
+    <div class="float-panel float-hold" id="holdPanel">
+      <div class="float-label">HOLD</div>
+      <canvas id="holdCanvas" width="52" height="52"></canvas>
     </div>
 
-    <div class="board-wrapper" id="boardWrapper">
-      <canvas id="boardCanvas"></canvas>
-      <div class="overlay" id="gameOverlay">
+    <!-- Next 悬浮层（右上角） -->
+    <div class="float-panel float-next" id="nextPanel">
+      <div class="float-label">NEXT</div>
+      <canvas id="nextCanvas" width="52" height="68"></canvas>
+    </div>
+
+    <!-- 暂停按钮（棋盘左上区域） -->
+    <button class="pause-float" id="pauseBtn">⏸</button>
+
+    <!-- 游戏结束覆盖层 -->
+    <div class="overlay" id="gameOverlay">
+      <div class="overlay-content">
         <h2>游戏结束</h2>
-        <p id="overlayScore">得分: 0</p>
-        <button class="btn btn-primary" id="overlayRetry">再来一局</button>
+        <div class="overlay-stats">
+          <div class="overlay-stat"><span>得分</span><strong id="overlayScore">0</strong></div>
+          <div class="overlay-stat"><span>等级</span><strong id="overlayLevel">1</strong></div>
+          <div class="overlay-stat"><span>消行</span><strong id="overlayLines">0</strong></div>
+        </div>
+        <div class="overlay-actions">
+          <button class="btn btn-primary" id="overlayRetry">再来一局</button>
+          <button class="btn btn-ghost" onclick="location.href='index.html'">返回大厅</button>
+        </div>
       </div>
     </div>
-
-    <div class="side-panel" id="nextPanel">
-      <div class="panel-label">下一个</div>
-      <canvas class="preview-canvas" id="nextCanvas" width="80" height="100"></canvas>
-    </div>
   </div>
 
-  <div class="control-bar">
-    <button class="btn btn-secondary" id="pauseBtn">暂停</button>
-    <button class="btn btn-primary" id="newGameBtn">新游戏</button>
+  <!-- Combo 提示容器 -->
+  <div id="comboContainer"></div>
+
+  <!-- ====== 底部触控面板 ====== -->
+  <div class="touch-bar" id="touchBar">
+    <button class="tbtn tbtn-move" id="tLeft">
+      <span class="tbtn-icon">◀</span>
+      <span class="tbtn-label">左</span>
+    </button>
+    <button class="tbtn tbtn-move" id="tDown">
+      <span class="tbtn-icon">▼</span>
+      <span class="tbtn-label">下</span>
+    </button>
+    <button class="tbtn tbtn-move" id="tRight">
+      <span class="tbtn-icon">▶</span>
+      <span class="tbtn-label">右</span>
+    </button>
+    <button class="tbtn tbtn-action" id="tRotate">
+      <span class="tbtn-icon">↻</span>
+      <span class="tbtn-label">旋转</span>
+    </button>
+    <button class="tbtn tbtn-action tbtn-drop" id="tDrop">
+      <span class="tbtn-icon">⬇</span>
+      <span class="tbtn-label">硬降</span>
+    </button>
+    <button class="tbtn tbtn-hold" id="tHold">
+      <span class="tbtn-icon">⊞</span>
+      <span class="tbtn-label">保持</span>
+    </button>
   </div>
 
-  <p class="hint">← → 移动 &nbsp;↑ 旋转 &nbsp;↓ 软降 &nbsp;空格 硬降 &nbsp;C 保持</p>
-
-  <div class="touch-controls">
-    <div class="touch-row">
-      <button class="touch-btn touch-btn-rotate" id="touchRotate">
-        <span class="touch-icon">↻</span>
-      </button>
-    </div>
-    <div class="touch-row">
-      <button class="touch-btn touch-btn-move touch-btn-left" id="touchLeft">
-        <span class="touch-icon">◀</span>
-      </button>
-      <button class="touch-btn touch-btn-softdrop" id="touchDown">
-        <span class="touch-icon">▼</span>
-        <span class="touch-label">软降</span>
-      </button>
-      <button class="touch-btn touch-btn-move touch-btn-right" id="touchRight">
-        <span class="touch-icon">▶</span>
-      </button>
-    </div>
-    <div class="touch-row">
-      <button class="touch-btn touch-btn-action touch-btn-drop" id="touchDrop">
-        <span class="touch-icon">⤓</span>
-        <span>硬降</span>
-      </button>
-      <button class="touch-btn touch-btn-action touch-btn-hold" id="touchHold">
-        <span class="touch-icon">⊞</span>
-        <span>保持</span>
-      </button>
-    </div>
+  <!-- ====== 底部功能栏 ====== -->
+  <div class="bottom-bar">
+    <button class="btn btn-ghost" id="newGameBtn">新游戏</button>
   </div>
 
 </div>
