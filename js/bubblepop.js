@@ -82,12 +82,27 @@
   }
 
   function pushNewRow() {
-    // Shift all rows down
+    // 自底向上：先将目标行清空，再按“世界 x 坐标最近列”下移泡泡。
+    // 六边形网格奇偶行列数不同（10 / 9），直接按列复制会产生 undefined 单元格与半格错位
     for (let r = ROWS - 1; r >= 1; r--) {
-      const cc = colCount(r);
-      for (let c = 0; c < cc; c++) grid[r][c] = grid[r - 1][c];
+      for (let c = 0; c < colCount(r); c++) grid[r][c] = null;
     }
-    // New top row
+    for (let r = ROWS - 1; r >= 1; r--) {
+      const srcRow = r - 1;
+      for (let c = 0; c < colCount(srcRow); c++) {
+        const v = grid[srcRow][c];
+        if (v === null || v === undefined) continue;
+        grid[srcRow][c] = null;
+        const targetX = hexX(srcRow, c);
+        let bestC = 0, bestD = Infinity;
+        for (let cc = 0; cc < colCount(r); cc++) {
+          const d = Math.abs(hexX(r, cc) - targetX);
+          if (d < bestD) { bestD = d; bestC = cc; }
+        }
+        grid[r][bestC] = v;
+      }
+    }
+    // 顶部生成新行
     for (let c = 0; c < colCount(0); c++) {
       grid[0][c] = Math.floor(Math.random() * COLORS.length);
     }

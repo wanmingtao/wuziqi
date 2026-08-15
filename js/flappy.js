@@ -36,6 +36,7 @@
 
   function resetGame() {
     score = 0; gameOver = false; started = false; groundX = 0;
+    frame = 0; // 重置帧计数，保证重开后第一根管道在固定帧数后出现
     overlay.classList.add('hidden');
     bird = { x: W * 0.3, y: H / 2, vy: 0, r: BIRD_R, rot: 0 };
     pipes = [];

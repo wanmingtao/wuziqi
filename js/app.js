@@ -427,7 +427,7 @@ const App = (() => {
         if (state.gameOver) {
             if (state.winCells) {
                 const winner = state.currentPlayer;
-                els.status.textContent = winner === Game.BLACK ? '白棋胜' : '黑棋胜';
+                els.status.textContent = winner === Game.BLACK ? '黑棋胜' : '白棋胜';
                 els.status.className = 'turn-text';
             } else {
                 els.status.textContent = '平局';

@@ -74,8 +74,10 @@
       die(); return;
     }
 
-    // Self collision
-    for (const seg of snake) {
+    // Self collision（若未吃食物，尾巴即将移走，应排除尾巴格避免误判）
+    const willEat = !!(food && head.x === food.x && head.y === food.y);
+    const bodyToCheck = willEat ? snake : snake.slice(0, -1);
+    for (const seg of bodyToCheck) {
       if (head.x === seg.x && head.y === seg.y) {
         die(); return;
       }
@@ -84,7 +86,7 @@
     snake.unshift(head);
 
     // Food
-    if (food && head.x === food.x && head.y === food.y) {
+    if (willEat) {
       score += food.type === 'bonus' ? 3 : 1;
       updateUI();
       saveBest();

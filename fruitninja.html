@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>水果忍者</title>
+  <link rel="stylesheet" href="css/fruitninja.css">
+  <script src="lib/gsap.min.js"></script>
+</head>
+<body>
+<canvas id="bgCanvas"></canvas>
+<div class="screen-flash" id="screenFlash"></div>
+<div class="border-glow" id="borderGlow"></div>
+<div class="app">
+  <div class="game-container" id="gameContainer">
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- 悬浮 HUD：盖在游戏区顶部，不占纵向空间 -->
+    <div class="hud" id="hud">
+      <div class="hud-item" id="scoreHud">
+        <span class="hud-label">🔪 分数</span>
+        <span class="hud-value" id="scoreDisplay">0</span>
+      </div>
+      <div class="hud-item" id="livesHud">
+        <span class="hud-label">❤️ 生命</span>
+        <span class="hud-value" id="livesDisplay">❤️❤️❤️</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">🏆 最高</span>
+        <span class="hud-value" id="bestDisplay">0</span>
+      </div>
+    </div>
+
+    <div class="combo-display" id="comboDisplay">
+      <div class="combo-text" id="comboText">🔥 x2</div>
+      <div class="combo-bar"><div class="combo-bar-fill" id="comboBarFill"></div></div>
+    </div>
+
+    <div class="overlay" id="overlay">
+      <div class="overlay-content" id="overlayContent">
+        <h2 id="resultTitle">🍉 水果忍者</h2>
+        <p id="resultText">划动手指 / 移动鼠标切开飞出的水果，小心 💣 炸弹！</p>
+        <button class="btn btn-primary" id="startBtn">开始游戏</button>
+      </div>
+    </div>
+
+    <p class="hint" id="hintText">🖱️ 按住鼠标滑动来切割</p>
+  </div>
+</div>
+<script src="js/fruitninja.js"></script>
+</body>
+</html>

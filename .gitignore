@@ -2,3 +2,6 @@
 .DS_Store
 *.log
 node_modules/
+
+# AI tooling logs
+.reasonix/
