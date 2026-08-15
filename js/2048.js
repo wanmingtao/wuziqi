@@ -430,33 +430,49 @@ const Game2048 = (() => {
       if (dir) { e.preventDefault(); slide(dir); }
     });
 
-    let tsX = 0, tsY = 0;
-    document.addEventListener('touchstart', e => {
-      tsX = e.touches[0].clientX; tsY = e.touches[0].clientY;
-    }, { passive: true });
+    // ---- 滑动输入：Pointer Events 优先（微信 WKWebView / X5 / 现代浏览器通用） ----
+    // 不用 touch 事件的原因：微信等 webview 会自行拦截/取消触摸手势，touchend 常收不到；
+    // pointer 事件配合 touch-action:none 可将滑动手势稳定交给页面。
+    if (window.PointerEvent) {
+      const ptr = new Map(); // pointerId -> 按下坐标
+      document.addEventListener('pointerdown', e => {
+        if (!ptr.has(e.pointerId)) ptr.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      });
+      document.addEventListener('pointerup', e => {
+        const p = ptr.get(e.pointerId);
+        if (!p) return;
+        ptr.delete(e.pointerId);
+        handleSwipe(e.clientX - p.x, e.clientY - p.y);
+      });
+      document.addEventListener('pointercancel', e => ptr.delete(e.pointerId));
+    } else {
+      // 极旧内核回退：touch + mouse
+      let tsX = 0, tsY = 0;
+      document.addEventListener('touchstart', e => {
+        tsX = e.touches[0].clientX; tsY = e.touches[0].clientY;
+      }, { passive: true });
+      document.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - tsX;
+        const dy = e.changedTouches[0].clientY - tsY;
+        handleSwipe(dx, dy);
+      }, { passive: true });
+      document.addEventListener('touchcancel', () => { tsX = 0; tsY = 0; });
+
+      let msX = 0, msY = 0, msDown = false;
+      document.addEventListener('mousedown', e => {
+        msX = e.clientX; msY = e.clientY; msDown = true;
+      });
+      document.addEventListener('mouseup', e => {
+        if (!msDown) return;
+        msDown = false;
+        handleSwipe(e.clientX - msX, e.clientY - msY);
+      });
+    }
+
+    // 兜底：阻止浏览器用滚动/刷新吞掉滑动手势（即使 touch-action 被 webview 忽略）
     document.addEventListener('touchmove', e => {
-      // 兜底：阻止浏览器用滚动/刷新吞掉滑动手势（CSS touch-action 之外的保险）
       if (e.cancelable) e.preventDefault();
     }, { passive: false });
-    document.addEventListener('touchend', e => {
-      const dx = e.changedTouches[0].clientX - tsX;
-      const dy = e.changedTouches[0].clientY - tsY;
-      handleSwipe(dx, dy);
-    }, { passive: true });
-    document.addEventListener('touchcancel', () => {
-      // 手势被系统打断：丢弃起点，避免误触发生成一次滑动
-      tsX = 0; tsY = 0;
-    });
-
-    let msX = 0, msY = 0, msDown = false;
-    document.addEventListener('mousedown', e => {
-      msX = e.clientX; msY = e.clientY; msDown = true;
-    });
-    document.addEventListener('mouseup', e => {
-      if (!msDown) return;
-      msDown = false;
-      handleSwipe(e.clientX - msX, e.clientY - msY);
-    });
 
     newBtn.addEventListener('click', resetGame);
     retryBtn.addEventListener('click', resetGame);

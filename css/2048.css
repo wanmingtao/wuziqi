@@ -20,16 +20,19 @@
 }
 
 html, body {
-  font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
-  background: var(--bg);
-  min-height: 100vh;
-  min-height: 100dvh;
-  overflow-x: hidden;
-  overscroll-behavior: none;              /* 禁止下拉刷新/橡皮筋抢占下滑手势 */
-  touch-action: none;                      /* 滑动手势全部交给游戏，浏览器不滚动/缩放 */
+  /* position:fixed 是微信/移动端 webview 下锁死滚动与橡皮筋的硬手段：
+     overflow:hidden 与 touch-action 在某些内核(微信 X5/WKWebView)会被无视 */
+  position: fixed;
+  inset: 0;
+  width: 100%; height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;              /* 禁止下拉刷新抢占手势 */
+  touch-action: none;                     /* 滑动手势全部交给游戏，浏览器不滚动/缩放 */
   -webkit-user-select: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg);
   color: var(--text);
 }
 
