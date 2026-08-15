@@ -434,11 +434,19 @@ const Game2048 = (() => {
     document.addEventListener('touchstart', e => {
       tsX = e.touches[0].clientX; tsY = e.touches[0].clientY;
     }, { passive: true });
+    document.addEventListener('touchmove', e => {
+      // 兜底：阻止浏览器用滚动/刷新吞掉滑动手势（CSS touch-action 之外的保险）
+      if (e.cancelable) e.preventDefault();
+    }, { passive: false });
     document.addEventListener('touchend', e => {
       const dx = e.changedTouches[0].clientX - tsX;
       const dy = e.changedTouches[0].clientY - tsY;
       handleSwipe(dx, dy);
     }, { passive: true });
+    document.addEventListener('touchcancel', () => {
+      // 手势被系统打断：丢弃起点，避免误触发生成一次滑动
+      tsX = 0; tsY = 0;
+    });
 
     let msX = 0, msY = 0, msDown = false;
     document.addEventListener('mousedown', e => {
